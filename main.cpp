@@ -13,7 +13,7 @@
 #include <list>
 
 #define WORD_W 10
-#define WORD_H 16
+#define WORD_H 18
 
 static int Window_width = 600;
 static int Window_height = 500;
@@ -21,7 +21,7 @@ static int Window_height = 500;
 static float cursor_x = 0;
 static float cursor_y = 0;
 
-#define Word_Y -1000.0f
+#define Word_Y 0.0f
 
 #define LEFT_TOP_COLOR glm::vec3(1.0f,0.0f,0.0f)
 #define RIGHT_TOP_COLOR glm::vec3(0.0f,1.0f,0.0f)
@@ -42,6 +42,8 @@ static float WorldPosX = 0.0f;
 static float WorldPosY = 0.0f;
 
 static bool RightButtonPressed = false;
+
+static float max_h = 0;
 
 constexpr float PI_1_180()
 {
@@ -77,7 +79,25 @@ BuildStr(ShaderSrc,fragment, #version 450 core \n
     }\n
 )
 
+BuildStr(ShaderSrc,line_vs, #version 450 core\n
+    uniform mat4 ortho; \n
+    uniform mat4 world; \n
+    uniform mat4 model; \n
+    layout(location = 0) in vec3 vposition; \n
+    void main() \n
+    { \n
+	    gl_Position = ortho * world * model * vec4( vposition, 1); \n
+    }\n
+)
 
+BuildStr(ShaderSrc,line_fg, #version 450 core \n
+    out vec4 color;  \n
+    uniform vec3 Color;\n
+    void main()\n
+    {\n
+	    color = vec4(Color,1.0f); \n
+    }\n
+)
 
 struct Plane {
     glm::vec3 pos;
@@ -93,6 +113,14 @@ public:
         this->c = c_;
         this->w = w_;
         this->h = h_;
+    }
+    Word() : pos(),
+            color(),
+            angle(),
+            c(0),
+            w(0),
+            h(0)
+    {
     }
     bool isSpace()
     {
@@ -169,10 +197,24 @@ public:
         glBindVertexArray(vertex_array);
 
         glGenBuffers(1,&vertex_buffer);
-        
-        //glBindBuffer(GL_ARRAY_BUFFER,vertex_buffer);
+        glBindVertexArray(0);
 
-        //glBufferData(GL_ARRAY_BUFFER,sizeof(data),data,GL_STATIC_DRAW);
+        glGenVertexArrays(1,&line_array);
+        glBindVertexArray(line_array);
+        glGenBuffers(1,&vernier_buffer);
+
+        float line_data[] = { 0.0f,0.0f,0.0f,0.0f,1.0f,0.0f};
+
+        glBindBuffer(GL_ARRAY_BUFFER,vernier_buffer);
+        
+        glBufferData(GL_ARRAY_BUFFER,sizeof(line_data),line_data,GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+
+       // glBindBuffer(GL_ARRAY_BUFFER,vernier_buffer);
+       // glBufferData(GL_ARRAY_BUFFER,sizeof(data),data,GL_STATIC_DRAW);
 
         //vposition = 0;
         //glVertexAttribPointer(vposition, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)0);
@@ -241,7 +283,49 @@ public:
         tex0 =      glGetUniformLocation(program,"ourTexture");
         ucolor =    glGetUniformLocation(program,"Color");
 
-        printf("init %d %d %d %d\n",ucolor,ortho,world,model);
+        //printf("init %d %d %d %d\n",ucolor,ortho,world,model);
+
+        line_vs = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(line_vs,1,&(_ShaderSrc::_line_vs),NULL);
+        glCompileShader(line_vs);
+
+        glGetShaderiv(line_vs,GL_COMPILE_STATUS,&compile_status);
+        if(!compile_status)
+        {
+            memset(buf,0,sizeof(buf));
+            glGetShaderInfoLog(line_vs,sizeof(buf),&size,buf);
+            printf("%d , %s\n",size,buf);
+        }
+
+
+        line_fg = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(line_fg,1,&(_ShaderSrc::_line_fg),NULL);
+        glCompileShader(line_fg);
+
+        glGetShaderiv(line_fg,GL_COMPILE_STATUS,&compile_status);
+        if(!compile_status)
+        {
+            memset(buf,0,sizeof(buf));
+            glGetShaderInfoLog(line_fg,sizeof(buf),&size,buf);
+            printf("%d %s\n",size,buf);
+        }
+
+        line_program = glCreateProgram();
+        glAttachShader(line_program,line_vs);
+        glAttachShader(line_program,line_fg);
+        glLinkProgram(line_program);
+
+        glUseProgram(line_program);
+
+        line_ortho =     glGetUniformLocation(line_program, "ortho");
+	    line_world =     glGetUniformLocation(line_program, "world");
+	    line_model =     glGetUniformLocation(line_program, "model");
+        line_color =    glGetUniformLocation(line_program,"Color");
+
+        printf("init %d %d %d %d\n",line_color,line_ortho,line_world,line_model);
+
+        glm::vec3 line_col(1.0f,1.0f,1.0f);
+        glUniform3fv(line_color,1,glm::value_ptr(line_col));
 
         glClearColor(0.0f,0.0f,0.0f,1.0f);
 
@@ -264,6 +348,8 @@ public:
 
     Word pop_end_word()
     {
+        if(words.empty())
+            return Word();
         Word *ptr = &(words.back());
         for(auto it = animate_list.begin();it != animate_list.end();)
         {
@@ -374,7 +460,7 @@ protected:
         _3.tc = glm::vec2(ax,by);
 
         _4.pos = glm::vec3(half_w , half_h,0.0f);
-         _4.tc = glm::vec2(bx,by);
+        _4.tc = glm::vec2(bx,by);
 
         planes.push_back(_1);
         planes.push_back(_3);
@@ -383,12 +469,32 @@ protected:
         planes.push_back(_2);
         planes.push_back(_1);
     }
+
+    void drawVernier(glm::mat4 &ortho_mat,glm::mat4 &world_mat)
+    {
+        glUseProgram(line_program);
+        glBindVertexArray(line_array);
+        glBindBuffer(GL_ARRAY_BUFFER,vernier_buffer);
+
+        glUniformMatrix4fv(line_ortho , 1, GL_FALSE, glm::value_ptr(ortho_mat));
+        glUniformMatrix4fv(line_world , 1, GL_FALSE, glm::value_ptr(world_mat));
+
+        glm::mat4 model_mat;
+        model_mat = glm::translate(model_mat,glm::vec3(cursor_x + 1.0f ,cursor_y,Word_Y - 5.0f));
+        model_mat = glm::scale(model_mat,glm::vec3(1.0f,WORD_H,1.0f));
+        glUniformMatrix4fv(line_model , 1, GL_FALSE, glm::value_ptr(model_mat));
+        
+        glDrawArrays(GL_LINES,0,2);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+
     virtual void draw() override{
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(program);
         glBindVertexArray(vertex_array);
-        glBindBuffer(GL_ARRAY_BUFFER,vertex_buffer);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,texture0);
         glUniform1i(tex0,0);
@@ -405,6 +511,7 @@ protected:
         
 		glUniformMatrix4fv(world, 1, GL_FALSE, glm::value_ptr(world_mat));
         draw_char();
+        drawVernier(ortho_mat,world_mat);
         // m_a += sinf(m_s) ;
         // if(m_a >= 360.0f)
         // {
@@ -433,11 +540,15 @@ protected:
     
     virtual void destroy() override{
         glDeleteTextures(1,&texture0);
+        glDeleteBuffers(1,&vernier_buffer);
         glDeleteBuffers(1,&vertex_buffer);
         glDeleteVertexArrays(1,&vertex_array);
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
         glDeleteProgram(program);
+        glDeleteShader(line_vs);
+        glDeleteShader(line_fg);
+        glDeleteProgram(line_program);
         RenderDemo::destroy();
     }
     static void CharCallBack(GLFWwindow* w,unsigned int v);
@@ -447,10 +558,10 @@ protected:
     static void MouseButtonCallBack(GLFWwindow*,int,int,int);
     static void CursorCallBack(GLFWwindow*,double,double);
 private:
-    GLuint vertex_array,vertex_shader,fragment_shader,texture0;
-    GLuint vertex_buffer;
+    GLuint vertex_array,vertex_shader,fragment_shader,texture0,line_vs,line_fg,line_program,line_array;
+    GLuint vertex_buffer,vernier_buffer;
     GLuint program;
-    GLuint vposition,ucolor,ortho,world,model,tex0;
+    GLuint vposition,ucolor,ortho,world,model,tex0,line_ortho,line_world,line_model,line_color;
     float m_a = 0.0f;
     float m_s = 0.0f;
     int char_map_w,char_map_h; 
@@ -460,7 +571,7 @@ private:
     bool needUpdatePlanes = false;
 };
 
-static float max_h = 0;
+
 static Demo1 *demo = nullptr;
 
 void Demo1::CharCallBack(GLFWwindow* w,unsigned int v)
@@ -468,9 +579,9 @@ void Demo1::CharCallBack(GLFWwindow* w,unsigned int v)
     auto cu = demo->getcu(v);
     if(!cu)
         return;
-    demo->push_back_word(glm::vec3(cursor_x,cursor_y,-10.0f),
+    demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                 glm::vec3(0.0f,0.0f,0.0f),
-                glm::vec3(1.0f,1.0f,1.0f),
+                glm::vec3(0.0f,1.0f,1.0f),
                 v,cu->w,cu->h);
     cursor_x += cu->w;
     if(cu->h > max_h)
@@ -511,7 +622,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 cursor_x = 0;
             break;
             case 14:
-                if(cursor_x == 0 && cursor_y == 0)
+                if(cursor_x <= 0 && cursor_y <= 0)
                     return;
                 {
                     Word wor = demo->pop_end_word();
