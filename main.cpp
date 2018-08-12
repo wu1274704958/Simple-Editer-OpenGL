@@ -13,7 +13,7 @@
 #include <list>
 
 #define WORD_W 10
-#define WORD_H 18
+static int WORD_H = 18;
 
 static int Window_width = 600;
 static int Window_height = 500;
@@ -178,6 +178,8 @@ public:
             char_unit::CharUnit cu;
             while((v = read_file(&cu,file)) != -1)
             {
+                if(cu.h > WORD_H)
+                    WORD_H = cu.h;
                 cus.push_back(cu);
             }
             fclose(file);
@@ -344,6 +346,7 @@ public:
             push_back_plane(w);
             animate_list.push_back(&(words.back()));
         }
+        frame_n = 0;
     }
 
     Word pop_end_word()
@@ -371,6 +374,7 @@ public:
             planes.pop_back();
             planes.pop_back();
         }
+        frame_n = 0;
         return wor; 
     }
 
@@ -511,7 +515,11 @@ protected:
         
 		glUniformMatrix4fv(world, 1, GL_FALSE, glm::value_ptr(world_mat));
         draw_char();
-        drawVernier(ortho_mat,world_mat);
+        if(frame_n <= 50)
+            drawVernier(ortho_mat,world_mat);
+        if(frame_n == 100)
+            frame_n = 0;
+        ++frame_n;
         // m_a += sinf(m_s) ;
         // if(m_a >= 360.0f)
         // {
@@ -562,8 +570,9 @@ private:
     GLuint vertex_buffer,vernier_buffer;
     GLuint program;
     GLuint vposition,ucolor,ortho,world,model,tex0,line_ortho,line_world,line_model,line_color;
-    float m_a = 0.0f;
-    float m_s = 0.0f;
+    int frame_n = 0;
+    //float m_a = 0.0f;
+    //float m_s = 0.0f;
     int char_map_w,char_map_h; 
     std::vector<Plane> planes;
     std::list<Word> words;
