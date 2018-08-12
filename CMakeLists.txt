@@ -4,7 +4,7 @@ project(OpenGL_1 VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options("/std:c++17")
 
-set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO ") #/subsystem:windows /entry:mainCRTStartup")
+set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO /subsystem:windows /entry:mainCRTStartup")
 include_directories(D:/MyLib/glfw-3.2.1/include
                     . 
                     "D:/MyLib/Simple OpenGL Image Library/src"

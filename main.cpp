@@ -34,6 +34,7 @@ static float cursor_y = 0;
 
 static const wchar_t const * KeyWord[] ={
     L"int",
+    L"if",
     L"char",
     L"long",
     L"float",
@@ -43,6 +44,13 @@ static const wchar_t const * KeyWord[] ={
     L"short",
     L"struct",
     L"return",
+    L"for",
+    L"while",
+    L"break",
+    L"continue",
+    L"else",
+    L"switch",
+    L"case"
 };
 template<typename T>
 struct ArrLen;
@@ -592,14 +600,10 @@ protected:
                 break;
                 default:
                 {
-                    // if(! (it->isSpace() || it->c == L'(' || it->c == L';' || it->c == L'{') )
-                    //     break;
-                    // ++it;
-                    // END_BREAK(it)
                     if(it != words.begin())
                     {
                         --it;
-                        if(! (it->isSpace() || it->c == L'(' || it->c == L';' || it->c == L'{' || it->c == L',') )
+                        if(! (it->isSpace() || it->c == L'(' || it->c == L';' || it->c == L'{' || it->c == L','  || it->c == L'}') )
                         {
                             ++it;
                             break;
@@ -626,7 +630,7 @@ protected:
                         }
                         if(f)
                         {
-                            if(! (it->isSpace() || it->c == L'}') )
+                            if(! (it->isSpace() || it->c == L'}' || it->c == L')' || it->c == L'(' || it->c == L';' || it->c == L'{' ) )
                             {
                                 it = src_it;
                                 break; 
@@ -642,7 +646,6 @@ protected:
                         } 
                     }
                 }
-                //goto NOSTEP;
                 break; 
             }
             ++it;
