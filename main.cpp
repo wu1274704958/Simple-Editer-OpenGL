@@ -23,10 +23,34 @@ static float cursor_y = 0;
 
 #define Word_Y 0.0f
 
-#define LEFT_TOP_COLOR glm::vec3(1.0f,0.0f,0.0f)
-#define RIGHT_TOP_COLOR glm::vec3(0.0f,1.0f,0.0f)
-#define LEFT_BUTTOM_COLOR glm::vec3(0.2f,1.0f,0.7f)
-#define RIGHT_BUTTOM_COLOR glm::vec3(0.7f,0.2f,0.5f)
+#define HUI_CHE 28
+#define KONG_GE 32
+#define SUO_JIN 15 
+
+#define GREEN glm::vec3(0.0f,1.0f,0.0f)
+#define STR_COLOR glm::vec3(1.0f,0.5f,0.5f)
+#define PRE_COLOR glm::vec3(0.2f,1.0f,0.7f) //预处理的颜色
+#define KEY_COLOR glm::vec3(0.3f,0.2f,1.0f)
+
+static const wchar_t const * KeyWord[] ={
+    L"int",
+    L"char",
+    L"long",
+    L"float",
+    L"double",
+    L"static",
+    L"const",
+    L"short",
+    L"struct",
+    L"return",
+};
+template<typename T>
+struct ArrLen;
+
+template<typename T,size_t N>
+struct ArrLen<T [N]>{
+    static const int value =  N;
+};
 
 #define PI  3.1415926535898f 
 
@@ -124,7 +148,7 @@ public:
     }
     bool isSpace()
     {
-        return this->c == 28 || this->c == 32 || this->c == 15;
+        return this->c == HUI_CHE || this->c == KONG_GE || this->c == SUO_JIN;
     }
     Word(const Word& w) {
         this->pos =     w.pos;
@@ -347,6 +371,7 @@ public:
             animate_list.push_back(&(words.back()));
         }
         frame_n = 0;
+        colour_word();
     }
 
     Word pop_end_word()
@@ -494,6 +519,138 @@ protected:
         glBindVertexArray(0);
     }
 
+#define END_BREAK(it)           \
+        if(it == words.end())   \
+                goto NOSTEP;     
+
+    void colour_word()
+    {
+        std::list<Word>::iterator it = words.begin();
+        for(;it != words.end();)
+        {
+            switch(it->c)
+            {
+                case L'/':
+                {
+                   Word *now = &(*it);
+                   ++it;
+                   END_BREAK(it)
+                   if(it->c == L'/')
+                   {
+                       now->color = GREEN;
+                       it->color = GREEN;
+                       do{
+                           ++it;
+                           END_BREAK(it)
+                           it->color = GREEN;
+                       }
+                       while(it->c != HUI_CHE);
+                   } else if(it->c == L'*')
+                   {
+                       now->color = GREEN;
+                       it->color = GREEN;
+                       do{
+                           ++it;
+                           END_BREAK(it)
+                           it->color = GREEN;
+                           if(it->c == L'*')
+                           {
+                               ++it;
+                               END_BREAK(it)
+                               it->color = GREEN;
+                               if(it->c == L'/')
+                               {
+                                   break;
+                               }
+                           }
+                       }
+                       while(true);
+                   }
+                   break; 
+                } 
+                case L'"':
+                {
+                    it->color = STR_COLOR;
+                    do{
+                        ++it;
+                        END_BREAK(it)
+                        it->color = STR_COLOR;
+                    }
+                    while(it->c != L'"');
+                }
+                break;  
+                case L'#':
+                {
+                    it->color = PRE_COLOR;
+                    do{
+                        ++it;
+                        END_BREAK(it)
+                        it->color = PRE_COLOR;
+                    }
+                    while(it->c != HUI_CHE);
+                }
+                break;
+                default:
+                {
+                    // if(! (it->isSpace() || it->c == L'(' || it->c == L';' || it->c == L'{') )
+                    //     break;
+                    // ++it;
+                    // END_BREAK(it)
+                    if(it != words.begin())
+                    {
+                        --it;
+                        if(! (it->isSpace() || it->c == L'(' || it->c == L';' || it->c == L'{' || it->c == L',') )
+                        {
+                            ++it;
+                            break;
+                        }
+                        ++it;
+                    }
+                    
+                    std::list<Word>::iterator src_it = it;
+                    bool f = true;
+                    for(int i = 0;i < ArrLen<decltype(KeyWord)>::value;++i)
+                    {
+                        f = true;
+                        int len = wcslen(KeyWord[i]);
+                        for(int j = 0;j < len;++j)
+                        {
+                            if(KeyWord[i][j] != it->c)
+                            {
+                                f = false;
+                                it = src_it;
+                                break;
+                            }
+                            ++it;
+                            END_BREAK(it)
+                        }
+                        if(f)
+                        {
+                            if(! (it->isSpace() || it->c == L'}') )
+                            {
+                                it = src_it;
+                                break; 
+                            }
+                            it = src_it;
+                            for(int j = 0;j < len;++j)
+                            {
+                                it->color = KEY_COLOR;
+                                ++it;
+                            }
+                            goto NOSTEP;
+                            break; 
+                        } 
+                    }
+                }
+                //goto NOSTEP;
+                break; 
+            }
+            ++it;
+NOSTEP:         ;
+        }
+    }
+#undef END_BREAK
+
     virtual void draw() override{
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -590,7 +747,7 @@ void Demo1::CharCallBack(GLFWwindow* w,unsigned int v)
         return;
     demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                 glm::vec3(0.0f,0.0f,0.0f),
-                glm::vec3(0.0f,1.0f,1.0f),
+                glm::vec3(1.0f,1.0f,1.0f),
                 v,cu->w,cu->h);
     cursor_x += cu->w;
     if(cu->h > max_h)
@@ -605,11 +762,11 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
     //printf("Char Mods %d %d\n",v1,v2);
     switch(v1)
     {
-        case 32:
+        case KONG_GE:
             demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            32,WORD_W,max_h);
+                            KONG_GE,WORD_W,max_h);
             cursor_x += WORD_W;
         break;
     }
@@ -622,11 +779,11 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
     {
         switch(v2)
         {
-            case 28:
+            case HUI_CHE:
                 demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            28,1,max_h);
+                            HUI_CHE,1,max_h);
                 cursor_y += max_h;
                 cursor_x = 0;
             break;
@@ -639,11 +796,11 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     cursor_y = wor.pos.y;
                 }
             break;
-            case 15:
+            case SUO_JIN:
                 demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            15,WORD_W * 4,max_h);
+                            SUO_JIN,WORD_W * 4,max_h);
                 cursor_x += WORD_W * 4;    
             break;
         }
