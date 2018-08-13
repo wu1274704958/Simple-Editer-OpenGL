@@ -231,6 +231,10 @@ public:
         glBindVertexArray(vertex_array);
 
         glGenBuffers(1,&vertex_buffer);
+
+        //EBO Buffer 
+        glGenBuffers(1,&word_ebo);
+        //EBO Buffer  --------------------------------------------
         glBindVertexArray(0);
 
         glGenVertexArrays(1,&line_array);
@@ -404,8 +408,8 @@ public:
             planes.pop_back();
             planes.pop_back();
             planes.pop_back();
-            planes.pop_back();
-            planes.pop_back();
+            //planes.pop_back();
+            //planes.pop_back();
         }
         frame_n = 0;
         return wor; 
@@ -443,11 +447,9 @@ protected:
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Plane), (void *)0);
 	    glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Plane), (void *)(sizeof(float) * 3 ));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Plane), (void *)12);
 	    glEnableVertexAttribArray(1);
 
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Plane), (void *)(sizeof(GLfloat) * 6) );
-	    glEnableVertexAttribArray(2);
         int index = 0;
         for(auto &w : words)
         {
@@ -465,10 +467,20 @@ protected:
 
 		    glUniformMatrix4fv(model, 1, GL_FALSE, glm::value_ptr(model_mat));
             glUniform3fv(ucolor,1,glm::value_ptr(w.color));
-            glDrawArrays(GL_TRIANGLES, index, 6);
-            index += 6;
-        }
 
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,word_ebo);
+            int zl = index << 2;
+            GLuint index_buf[] = { 0 + zl ,2 + zl,3 + zl,3 + zl,1 + zl,0 + zl  };
+
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(index_buf),index_buf,GL_STATIC_DRAW);
+
+            //glDrawArrays(GL_TRIANGLES, index, 6);
+            glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+            index += 1;
+        }
+        
         glBindBuffer(GL_ARRAY_BUFFER,0);
     }
     void push_back_plane(Word& w)
@@ -500,11 +512,11 @@ protected:
         _4.tc = glm::vec2(bx,by);
 
         planes.push_back(_1);
+        planes.push_back(_2);
         planes.push_back(_3);
         planes.push_back(_4);
-        planes.push_back(_4);
-        planes.push_back(_2);
-        planes.push_back(_1);
+        //planes.push_back(_2);
+        //planes.push_back(_1);
     }
 
     void drawVernier(glm::mat4 &ortho_mat,glm::mat4 &world_mat)
@@ -727,7 +739,7 @@ NOSTEP:         ;
     static void CursorCallBack(GLFWwindow*,double,double);
 private:
     GLuint vertex_array,vertex_shader,fragment_shader,texture0,line_vs,line_fg,line_program,line_array;
-    GLuint vertex_buffer,vernier_buffer;
+    GLuint vertex_buffer,vernier_buffer,word_ebo;
     GLuint program;
     GLuint vposition,ucolor,ortho,world,model,tex0,line_ortho,line_world,line_model,line_color;
     int frame_n = 0;
@@ -777,7 +789,7 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
 
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
-    //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
+    printf("Key %d %d %d %d\n",v1,v2,v3,v4);
     if(v3 == 1)
     {
         switch(v2)
@@ -805,6 +817,16 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             glm::vec3(),
                             SUO_JIN,WORD_W * 4,max_h);
                 cursor_x += WORD_W * 4;    
+            break;
+            case 331:
+                if(cursor_x <= 0 && cursor_y <= 0)
+                    return;
+                {
+                   
+                }
+            break;
+            case 333:
+
             break;
         }
     }else if(v3 == 2){
