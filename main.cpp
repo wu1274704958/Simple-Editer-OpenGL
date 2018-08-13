@@ -191,6 +191,7 @@ public:
 };
 
 std::list<Word*> animate_list;
+std::list<Word>::iterator *pit = nullptr;
 
 class Demo1 : public RenderDemo{
 public:
@@ -414,7 +415,12 @@ public:
         frame_n = 0;
         return wor; 
     }
-
+    std::list<Word>::iterator get_last_it()
+    {
+        auto it = words.end();
+        --it;
+        return it;
+    }
     const char_unit::CharUnit *getcu(wchar_t c)
     {
         for(auto &cu: cus)
@@ -822,11 +828,35 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
                 {
-                   
+                   if(!pit)
+                   {
+                       pit = new std::list<Word>::iterator(demo->get_last_it());
+                   }else
+                        --(*pit);
+                    
+                    cursor_x = (*pit)->pos.x;
+                    cursor_y = (*pit)->pos.y;
+                    demo->frame_n = 0;
                 }
             break;
             case 333:
-
+            
+                if(demo->words.empty() || ( cursor_x > demo->words.back().pos.x && cursor_y > demo->words.back().pos.y ) )
+                {
+                    return;
+                }
+                ++(*pit);
+                if(*pit == demo->words.end())
+                {
+                    --(*pit);
+                    cursor_x += (*pit)->w;
+                    demo->frame_n = 0;
+                    ++(*pit);
+                    return ;
+                }
+                cursor_x = (*pit)->pos.x;
+                cursor_y = (*pit)->pos.y;
+                demo->frame_n = 0;
             break;
         }
     }else if(v3 == 2){
@@ -911,4 +941,7 @@ int main()
     }
     d.init();
     d.run();
+
+    if(pit)
+        delete pit;
 }
