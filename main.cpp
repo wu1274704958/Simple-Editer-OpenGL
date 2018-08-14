@@ -467,6 +467,7 @@ public:
         }
         it++;
         frame_n = 0;
+        needUpdateColour = true;
     }
     void remove_forword_it(std::list<Word>::iterator &it)
     {
