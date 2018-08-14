@@ -415,6 +415,33 @@ public:
         frame_n = 0;
         return wor; 
     }
+    void get_less_xy_it(std::list<Word>::iterator &it,int x,int y)
+    {
+        while(true)
+        {
+            --it;
+            if(it->pos.x <= x && it->pos.y < y)
+                return;
+        }
+    }
+    void get_more_xy_it(std::list<Word>::iterator &it,int x,int y)
+    {
+        for(;it != words.end();)
+        {
+            ++it;
+            if(it->pos.y > y)
+             {
+                 if(it == words.end())
+                    return;
+                else if(it->c == HUI_CHE ){
+                    return;
+                }else if(it->pos.x >= x)
+                {
+                    return;
+                }
+             }   
+        }
+    }
     std::list<Word>::iterator get_last_it()
     {
         auto it = words.end();
@@ -796,7 +823,7 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
     printf("Key %d %d %d %d\n",v1,v2,v3,v4);
-    if(v3 == 1)
+    if(v3 == 1 || v3 == 2)
     {
         switch(v2)
         {
@@ -824,7 +851,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             SUO_JIN,WORD_W * 4,max_h);
                 cursor_x += WORD_W * 4;    
             break;
-            case 331:
+            case 331: // left 
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
                 {
@@ -839,9 +866,9 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     demo->frame_n = 0;
                 }
             break;
-            case 333:
+            case 333:  // right
             
-                if(demo->words.empty() || ( cursor_x > demo->words.back().pos.x && cursor_y > demo->words.back().pos.y ) )
+                if(demo->words.empty() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
                 {
                     return;
                 }
@@ -858,17 +885,33 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 cursor_y = (*pit)->pos.y;
                 demo->frame_n = 0;
             break;
-        }
-    }else if(v3 == 2){
-        switch(v2){
-            case 14:
-                if(cursor_x == 0 && cursor_y == 0)
+            case 328:  // up
+                if(cursor_y == 0)
                     return;
+                if(!pit)
+                    pit = new std::list<Word>::iterator(demo->get_last_it());
+                demo->get_less_xy_it(*pit,cursor_x,cursor_y); 
+                cursor_x = (*pit)->pos.x;
+                cursor_y = (*pit)->pos.y;
+                demo->frame_n = 0;
+
+            break;
+            case 336:  // down
+                if( demo->words.empty() || cursor_y == demo->words.back().pos.y)
+                    return;
+                demo->get_more_xy_it(*pit,cursor_x,cursor_y); 
+                if(*pit == demo->words.end())
                 {
-                    Word wor = demo->pop_end_word();
-                    cursor_x = wor.pos.x;
-                    cursor_y = wor.pos.y;
+                     --(*pit);
+                    cursor_x = (*pit)->pos.x + (*pit)->w;
+                    cursor_y = (*pit)->pos.y;
+                    demo->frame_n = 0;
+                    ++(*pit);
+                    return ;
                 }
+                cursor_x = (*pit)->pos.x;
+                cursor_y = (*pit)->pos.y;
+                demo->frame_n = 0;
             break;
         }
     }
