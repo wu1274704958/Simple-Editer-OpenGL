@@ -470,18 +470,19 @@ public:
     }
     void remove_forword_it(std::list<Word>::iterator &it)
     {
-        bool f = true;
+        bool f = false;
         int x = it->pos.x;
         int y = it->pos.y;
-        bool f2 = false;
-        if(it->c == HUI_CHE)
-        {
-            f2 = true;
-        }
+        //bool f2 = false;
+        //if(it->c == HUI_CHE)
+        //{
+        //    f2 = true;
+        //}
         --it;
         int offsetx = it->pos.x - x;
         int offsety = it->pos.y - y;
-
+        if(it->c == HUI_CHE)
+            f = true;
         int ci = 0;
         it = words.erase(it);
         std::list<Word>::iterator n_it = it;
@@ -493,11 +494,10 @@ public:
             }
             n_it->pos.x += offsetx;
             n_it->pos.y += offsety;
-            if(! n_it->isSpace())
-                f = false;
+            
             if(n_it->c == HUI_CHE)
             {
-                if(f2)
+                if(f)
                 {
                     ++n_it;
                     if(n_it == words.end())
@@ -512,10 +512,6 @@ public:
                         }
                         n_it->pos.x += offsetx;
                         n_it->pos.y += offsety;
-                        if(! n_it->isSpace())
-                            f = false;   
-                        if(n_it->c == HUI_CHE)
-                            break;
                         ++n_it;    
                     }
                 }
@@ -525,10 +521,8 @@ public:
         }
         frame_n = 0;
         //printf("%d",it->c);
-        if(!f)
-        {
-            needUpdatePlanes = true;
-        }
+        
+        needUpdatePlanes = true;
         needUpdateColour = true;
     }
     void get_less_xy_it(std::list<Word>::iterator &it,int x,int y)
@@ -702,6 +696,7 @@ protected:
         std::list<Word>::iterator it = words.begin();
         for(;it != words.end();)
         {
+            it->color = glm::vec3(1.0f,1.0f,1.0f);
             switch(it->c)
             {
                 case L'/':
@@ -972,13 +967,13 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            HUI_CHE,0,max_h);
+                            HUI_CHE,6,max_h);
                 
                 }else{
                     demo->insert_space_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            HUI_CHE,0,max_h);
+                            HUI_CHE,6,max_h);
                 }
                 cursor_y += max_h;
                 cursor_x = 0;
