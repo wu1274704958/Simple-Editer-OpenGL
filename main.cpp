@@ -384,7 +384,7 @@ public:
             animate_list.push_back(&(words.back()));
         }
         frame_n = 0;
-        colour_word();
+        needUpdateColour = true;
     }
 
     Word pop_end_word()
@@ -414,6 +414,32 @@ public:
         }
         frame_n = 0;
         return wor; 
+    }
+    void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    {
+        Word w(pos_,angle_,color_,c_,w_,h_);
+        it = words.insert(it,w);
+        std::list<Word>::iterator n_it = it;
+        while(true)
+        {
+            n_it++;
+            if(n_it == words.end())
+            {
+                break;
+            }
+            n_it->pos.x += w_;
+            if(n_it->c == HUI_CHE)
+            {
+                break;
+            }
+        }
+        it++;
+        frame_n = 0;
+        if(c_ != KONG_GE)
+        {
+            needUpdatePlanes = true;
+            needUpdateColour = true;
+        }
     }
     void get_less_xy_it(std::list<Word>::iterator &it,int x,int y)
     {
@@ -462,6 +488,11 @@ public:
 protected:
     void draw_char()
     {
+        if(needUpdateColour)
+        {
+            colour_word();
+            needUpdateColour = false;
+        }
         if(needUpdatePlanes)
         {
             planes.clear();
@@ -754,6 +785,7 @@ NOSTEP:         ;
     virtual void destroy() override{
         glDeleteTextures(1,&texture0);
         glDeleteBuffers(1,&vernier_buffer);
+        glDeleteBuffers(1,&word_ebo);
         glDeleteBuffers(1,&vertex_buffer);
         glDeleteVertexArrays(1,&vertex_array);
         glDeleteShader(vertex_shader);
@@ -783,6 +815,7 @@ private:
     std::list<Word> words;
     std::vector<char_unit::CharUnit> cus;
     bool needUpdatePlanes = false;
+    bool needUpdateColour = false;
 };
 
 
@@ -793,10 +826,18 @@ void Demo1::CharCallBack(GLFWwindow* w,unsigned int v)
     auto cu = demo->getcu(v);
     if(!cu)
         return;
-    demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
+    if(pit == nullptr || *pit == demo->words.end())
+    {
+        demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                 glm::vec3(0.0f,0.0f,0.0f),
                 glm::vec3(1.0f,1.0f,1.0f),
                 v,cu->w,cu->h);
+    }else{
+        demo->insert_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                glm::vec3(0.0f,0.0f,0.0f),
+                glm::vec3(1.0f,1.0f,1.0f),
+                v,cu->w,cu->h);
+    }
     cursor_x += cu->w;
     if(cu->h > max_h)
     {
@@ -811,10 +852,18 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
     switch(v1)
     {
         case KONG_GE:
-            demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
+            if(pit == nullptr || *pit == demo->words.end())
+            {
+                demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
                             KONG_GE,WORD_W,max_h);
+            }else{
+                demo->insert_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            KONG_GE,WORD_W,max_h);
+            }
             cursor_x += WORD_W;
         break;
     }
@@ -831,7 +880,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
-                            HUI_CHE,1,max_h);
+                            HUI_CHE,0,max_h);
                 cursor_y += max_h;
                 cursor_x = 0;
             break;
@@ -845,10 +894,18 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 }
             break;
             case SUO_JIN:
-                demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
+                if(pit == nullptr || *pit == demo->words.end())
+                {
+                     demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
                             SUO_JIN,WORD_W * 4,max_h);
+                }else{
+                    demo->insert_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            SUO_JIN,WORD_W * 4,max_h);
+                }
                 cursor_x += WORD_W * 4;    
             break;
             case 331: // left 
@@ -868,7 +925,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
             break;
             case 333:  // right
             
-                if(demo->words.empty() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
+                if(demo->words.empty() || *pit == demo->words.end() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
                 {
                     return;
                 }
@@ -876,6 +933,14 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 if(*pit == demo->words.end())
                 {
                     --(*pit);
+                    if((*pit)->c == HUI_CHE)
+                    {
+                        cursor_y += (*pit)->h;
+                        cursor_x = 0;
+                        demo->frame_n = 0;
+                         ++(*pit);
+                        return ;
+                    }
                     cursor_x += (*pit)->w;
                     demo->frame_n = 0;
                     ++(*pit);
@@ -898,11 +963,22 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
             break;
             case 336:  // down
                 if( demo->words.empty() || cursor_y == demo->words.back().pos.y)
+                {
+                    if(demo->words.back().c == HUI_CHE)
+                    {
+                        cursor_y += (*pit)->h;
+                        *pit = demo->words.end();
+                        cursor_x = 0;
+                        demo->frame_n = 0;
+                        return;
+                    }
                     return;
+                }
+                    
                 demo->get_more_xy_it(*pit,cursor_x,cursor_y); 
                 if(*pit == demo->words.end())
                 {
-                     --(*pit);
+                    --(*pit);
                     cursor_x = (*pit)->pos.x + (*pit)->w;
                     cursor_y = (*pit)->pos.y;
                     demo->frame_n = 0;
