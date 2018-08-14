@@ -441,6 +441,96 @@ public:
             needUpdateColour = true;
         }
     }
+    void insert_space_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    {
+        Word space(pos_,angle_,color_,c_,w_,h_);
+        it = words.insert(it,space);
+        std::list<Word>::iterator n_it = it;
+        while(true)
+        {
+            n_it++;
+            if(n_it == words.end())
+            {
+                break;
+            }
+            n_it->pos.x -= pos_.x;
+            n_it->pos.y += h_;
+            if(n_it->c == HUI_CHE)
+            {
+                break;
+            }
+        }
+        while(n_it != words.end())
+        {
+            n_it++;
+            n_it->pos.y += h_;
+        }
+        it++;
+        frame_n = 0;
+    }
+    void remove_forword_it(std::list<Word>::iterator &it)
+    {
+        bool f = true;
+        int x = it->pos.x;
+        int y = it->pos.y;
+        bool f2 = false;
+        if(it->c == HUI_CHE)
+        {
+            f2 = true;
+        }
+        --it;
+        int offsetx = it->pos.x - x;
+        int offsety = it->pos.y - y;
+
+        int ci = 0;
+        it = words.erase(it);
+        std::list<Word>::iterator n_it = it;
+        while(true)
+        {
+            if(n_it == words.end())
+            {
+                break;
+            }
+            n_it->pos.x += offsetx;
+            n_it->pos.y += offsety;
+            if(! n_it->isSpace())
+                f = false;
+            if(n_it->c == HUI_CHE)
+            {
+                if(f2)
+                {
+                    ++n_it;
+                    if(n_it == words.end())
+                        break;
+                    offsetx = x - n_it->pos.x;
+                    offsety = y - n_it->pos.y;
+                    while(true)
+                    {
+                        if(n_it == words.end())
+                        {
+                            break;
+                        }
+                        n_it->pos.x += offsetx;
+                        n_it->pos.y += offsety;
+                        if(! n_it->isSpace())
+                            f = false;   
+                        if(n_it->c == HUI_CHE)
+                            break;
+                        ++n_it;    
+                    }
+                }
+                break;
+            }
+            n_it++;
+        }
+        frame_n = 0;
+        //printf("%d",it->c);
+        if(!f)
+        {
+            needUpdatePlanes = true;
+        }
+        needUpdateColour = true;
+    }
     void get_less_xy_it(std::list<Word>::iterator &it,int x,int y)
     {
         while(true)
@@ -877,20 +967,33 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
         switch(v2)
         {
             case HUI_CHE:
-                demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
+                if(pit == nullptr || *pit == demo->words.end())
+                {
+                    demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
                             HUI_CHE,0,max_h);
+                
+                }else{
+                    demo->insert_space_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            HUI_CHE,0,max_h);
+                }
                 cursor_y += max_h;
                 cursor_x = 0;
             break;
             case 14:
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
-                {
+                if(pit == nullptr || *pit == demo->words.end()){
                     Word wor = demo->pop_end_word();
                     cursor_x = wor.pos.x;
                     cursor_y = wor.pos.y;
+                }else{
+                    demo->remove_forword_it(*pit);
+                    cursor_x = (*pit)->pos.x;
+                    cursor_y = (*pit)->pos.y;
                 }
             break;
             case SUO_JIN:
