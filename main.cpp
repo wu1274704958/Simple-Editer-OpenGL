@@ -957,7 +957,7 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
 
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
-    printf("Key %d %d %d %d\n",v1,v2,v3,v4);
+    //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
     if(v3 == 1 || v3 == 2)
     {
         switch(v2)
