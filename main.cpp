@@ -438,8 +438,8 @@ public:
         if(c_ != KONG_GE)
         {
             needUpdatePlanes = true;
-            needUpdateColour = true;
         }
+        needUpdateColour = true;
     }
     void insert_space_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
