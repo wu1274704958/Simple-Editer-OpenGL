@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <list>
 
-#define WORD_W 10
+static int WORD_W = 10;
 static int WORD_H = 18;
 
 static int Window_width = 600;
@@ -43,6 +43,7 @@ static const wchar_t const * KeyWord[] ={
     L"const",
     L"short",
     L"struct",
+    L"sizeof",
     L"return",
     L"for",
     L"while",
@@ -50,7 +51,8 @@ static const wchar_t const * KeyWord[] ={
     L"continue",
     L"else",
     L"switch",
-    L"case"
+    L"case",
+    L"unsigned"
 };
 template<typename T>
 struct ArrLen;
@@ -212,7 +214,10 @@ public:
             while((v = read_file(&cu,file)) != -1)
             {
                 if(cu.h > WORD_H)
+                {
                     WORD_H = cu.h;
+                    WORD_W = cu.w;
+                }
                 cus.push_back(cu);
             }
             fclose(file);
