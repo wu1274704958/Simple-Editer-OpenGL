@@ -2,6 +2,19 @@
     "cmake.configureOnOpen": true,
     "files.associations": {
         "algorithm": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "array": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "initializer_list": "cpp",
+        "fstream": "cpp",
+        "memory": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "system_error": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "xlocale": "cpp"
     }
 }
