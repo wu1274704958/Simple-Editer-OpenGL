@@ -31,6 +31,7 @@ static float cursor_y = 0;
 #define STR_COLOR glm::vec3(1.0f,0.5f,0.5f)
 #define PRE_COLOR glm::vec3(0.2f,1.0f,0.7f) //预处理的颜色
 #define KEY_COLOR glm::vec3(0.3f,0.2f,1.0f)
+#define OTHER_COLOR glm::vec3(1.f,1.f,1.f)
 
 static const wchar_t const * KeyWord[] ={
     L"int",
@@ -418,6 +419,7 @@ public:
             //planes.pop_back();
         }
         frame_n = 0;
+        needUpdateColour = true;
         return wor; 
     }
     void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
@@ -702,7 +704,7 @@ protected:
         std::list<Word>::iterator it = words.begin();
         for(;it != words.end();)
         {
-            it->color = glm::vec3(1.0f,1.0f,1.0f);
+            it->color = OTHER_COLOR;
             switch(it->c)
             {
                 case L'/':
@@ -710,6 +712,7 @@ protected:
                    Word *now = &(*it);
                    ++it;
                    END_BREAK(it)
+                   it->color = OTHER_COLOR;
                    if(it->c == L'/')
                    {
                        now->color = GREEN;
