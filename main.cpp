@@ -33,7 +33,7 @@ static float cursor_y = 0;
 #define KEY_COLOR glm::vec3(0.3f,0.2f,1.0f)
 #define OTHER_COLOR glm::vec3(1.f,1.f,1.f)
 
-static const wchar_t const * KeyWord[] ={
+static const wchar_t  * const KeyWord[] ={
     L"int",
     L"if",
     L"char",
@@ -457,7 +457,7 @@ public:
         }
         needUpdateColour = true;
     }
-    void insert_space_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    void insert_return_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
         Word space(pos_,angle_,color_,c_,w_,h_);
         it = words.insert(it,space);
@@ -998,7 +998,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             HUI_CHE,6,max_h);
                 
                 }else{
-                    demo->insert_space_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                    demo->insert_return_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
                             glm::vec3(),
                             glm::vec3(),
                             HUI_CHE,6,max_h);
