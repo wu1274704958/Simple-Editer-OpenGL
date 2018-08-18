@@ -223,6 +223,7 @@ public:
             }
             fclose(file);
         }
+        max_h = WORD_H;
         glfwSetCharCallback(m_window,Demo1::CharCallBack);
         glfwSetCharModsCallback(m_window,Demo1::CharModsCallBack);
         glfwSetKeyCallback(m_window,Demo1::KeyCallBack);
@@ -430,6 +431,50 @@ public:
         frame_n = 0;
         needUpdateColour = true;
         return wor; 
+    }
+    void insert_back_it_no(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    {
+        Word w(pos_,angle_,color_,c_,w_,h_);
+        it = words.insert(it,w);
+        ++it;
+    }
+    void adjustPos(std::list<Word>::iterator last,std::list<Word>::iterator next)
+    {
+        bool f = false;
+        int bx,by;
+        if(last->c == HUI_CHE)
+            f = true;
+        if(f)
+        {
+            bx = 0;
+            by = last->pos.y + last->h; 
+        }else{
+            bx = last->pos.x + last->w;
+            by = last->pos.y; 
+        }
+        while(true)
+        {
+            if(next == words.end())
+                break;
+            while(true)
+            {
+                if(next == words.end())
+                    goto adjustPos_END;
+
+                next->pos.x = bx;
+                next->pos.y = by;
+                bx += next->w;
+                if(next->c == HUI_CHE)
+                {
+                    bx = 0;
+                    by = by + next->h;
+                    ++next;
+                    break;
+                }
+                ++next;
+            }    
+        }
+        adjustPos_END: ;
     }
     void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
@@ -975,7 +1020,7 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
 static bool CtrlDown = false;
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
-    printf("Key %d %d %d %d\n",v1,v2,v3,v4);
+    //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
     if(v1 == 341)
     {
         if(v3 == 1)
@@ -1122,40 +1167,89 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
         if(v2 == 47)
         {
             const char * p = glfwGetClipboardString(demo->m_window);
-            bool allIsSpace = true;
-            while(*p)
+            
+            if(pit == nullptr || *pit == demo->words.end())
             {
-                switch(*p)
+                bool allIsSpace = true;
+                while(*p)
                 {
-                    case ' ':
-                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
-                            glm::vec3(),
-                            glm::vec3(),
-                            KONG_GE,WORD_W,max_h);
-                        cursor_x += WORD_W;
-                    break;
-                    case '\t':
-                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
-                            glm::vec3(),
-                            glm::vec3(),
-                            SUO_JIN,WORD_W * 4,max_h);
-                        cursor_x += WORD_W * 4;   
-                    break;
-                    case '\n':
-                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
-                            glm::vec3(),
-                            glm::vec3(),
-                            HUI_CHE,6,max_h);
-                        cursor_y += max_h;
-                        cursor_x = 0;
-                    break;
-                    default:
+                    switch(*p)
+                    {
+                        case ' ':
+                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                KONG_GE,WORD_W,max_h);
+                            cursor_x += WORD_W;
+                        break;
+                        case '\t':
+                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                SUO_JIN,WORD_W * 4,max_h);
+                            cursor_x += WORD_W * 4;   
+                        break;
+                        case '\n':
+                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                HUI_CHE,6,max_h);
+                            cursor_y += max_h;
+                            cursor_x = 0;
+                        break;
+                        default:
+                            {
+                                auto cu = demo->getcu(*p);
+                                if(!cu)
+                                    break;
+                                allIsSpace = false;
+                                demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                    glm::vec3(0.0f,0.0f,0.0f),
+                                    glm::vec3(1.0f,1.0f,1.0f),
+                                    *p,cu->w,cu->h);
+                                cursor_x += cu->w;
+                                if(cu->h > max_h)
+                                {
+                                    max_h = cu->h;
+                                }
+                            }
+                        break;
+                    }
+                    ++p;
+                }
+            }else{
+                while(*p)
+                {
+                    switch(*p)
+                    {
+                        case ' ':
+                            demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                KONG_GE,WORD_W,max_h);
+                            cursor_x += WORD_W;
+                        break;
+                        case '\t':
+                            demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                SUO_JIN,WORD_W * 4,max_h);
+                            cursor_x += WORD_W * 4;  
+                        break;
+                        case '\n':
+                            demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                HUI_CHE,6,max_h);
+                            cursor_y += max_h;
+                            cursor_x = 0;
+                        break;
+                        default:
                         {
                             auto cu = demo->getcu(*p);
                             if(!cu)
                                 break;
-                            allIsSpace = false;
-                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                            demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
                                 glm::vec3(0.0f,0.0f,0.0f),
                                 glm::vec3(1.0f,1.0f,1.0f),
                                 *p,cu->w,cu->h);
@@ -1164,16 +1258,18 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             {
                                 max_h = cu->h;
                             }
+                            break;
                         }
-                    break;
+                    }
+                    ++p;
                 }
-                p++;
+                std::list<Word>::iterator last = *pit;
+                std::list<Word>::iterator next = *pit;
+                --last;
+                demo->adjustPos(last,next);
             }
-            if(!allIsSpace)
-            {
-                demo->needUpdateColour = true;
-                demo->needUpdatePlanes = true;
-            }
+            demo->needUpdateColour = true;
+            demo->needUpdatePlanes = true;
         }
     }
 }
