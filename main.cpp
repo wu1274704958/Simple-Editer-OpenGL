@@ -1138,7 +1138,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 else if(cursor_y == demo->words.back().pos.y){
                     if(demo->words.back().c == HUI_CHE)
                     {
-                        cursor_y += (*pit)->h;
+                        cursor_y += demo->words.back().h;
                         *pit = demo->words.end();
                         cursor_x = 0;
                         demo->frame_n = 0;
