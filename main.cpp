@@ -11,6 +11,7 @@
 #include <vector>
 #include <stdio.h>
 #include <list>
+#include <tuple>
 
 static int WORD_W = 10;
 static int WORD_H = 18;
@@ -33,28 +34,6 @@ static float cursor_y = 0;
 #define KEY_COLOR glm::vec3(0.3f,0.2f,1.0f)
 #define OTHER_COLOR glm::vec3(1.f,1.f,1.f)
 
-static const wchar_t  * const KeyWord[] ={
-    L"int",
-    L"if",
-    L"char",
-    L"long",
-    L"float",
-    L"double",
-    L"static",
-    L"const",
-    L"short",
-    L"struct",
-    L"sizeof",
-    L"return",
-    L"for",
-    L"while",
-    L"break",
-    L"continue",
-    L"else",
-    L"switch",
-    L"case",
-    L"unsigned"
-};
 template<typename T>
 struct ArrLen;
 
@@ -62,6 +41,78 @@ template<typename T,size_t N>
 struct ArrLen<T [N]>{
     static const int value =  N;
 };
+
+template<size_t N>
+struct KW{
+public:
+    const wchar_t * const p;
+    enum{ Len = N};
+    KW(const wchar_t *str) : p(str) {}
+    int get_len() { return Len - 1; }
+};
+
+#define MK_KEYWORD(str)                      \
+namespace ns_keywords{ const wchar_t _##str [] = L## #str; }
+
+MK_KEYWORD(int)
+MK_KEYWORD(if)
+MK_KEYWORD(char)
+MK_KEYWORD(long)
+MK_KEYWORD(float)
+MK_KEYWORD(double)
+MK_KEYWORD(static)
+MK_KEYWORD(const)
+MK_KEYWORD(short)
+MK_KEYWORD(struct)
+MK_KEYWORD(sizeof)
+MK_KEYWORD(return)
+MK_KEYWORD(for)
+MK_KEYWORD(while)
+MK_KEYWORD(break)
+MK_KEYWORD(continue)
+MK_KEYWORD(else)
+MK_KEYWORD(switch)
+MK_KEYWORD(case)
+MK_KEYWORD(unsigned)
+
+#undef MK_KEYWORD
+
+#define MK_KW(str) \
+    KW< ArrLen< decltype( ns_keywords::_##str ) >::value >(ns_keywords::_##str) 
+
+auto KW_TUP = std::make_tuple( 
+    MK_KW(int)          ,
+    MK_KW(if)           ,
+    MK_KW(char)         ,
+    MK_KW(long)         ,
+    MK_KW(float)        ,
+    MK_KW(double)       ,
+    MK_KW(static)       ,
+    MK_KW(const)        ,
+    MK_KW(short)        ,
+    MK_KW(struct)       ,
+    MK_KW(sizeof)       ,
+    MK_KW(return)       ,
+    MK_KW(for)          ,
+    MK_KW(while)        ,    
+    MK_KW(break)        ,    
+    MK_KW(continue)     ,    
+    MK_KW(else)         ,
+    MK_KW(switch)       ,
+    MK_KW(case)         ,
+    MK_KW(unsigned)         
+   );
+
+#undef MK_KW
+
+template<size_t ...N>
+auto get_kw_tuple(int index,std::index_sequence<N...> is) -> std::tuple<const wchar_t*,int>
+{
+    const wchar_t *ptr = nullptr;
+    int len = 0;
+    ((index == N && (ptr = std::get<N>(KW_TUP).p,len = std::get<N>(KW_TUP).get_len()),false),...); 
+    return std::make_tuple(ptr,len);
+}
 
 #define PI  3.1415926535898f 
 
@@ -837,14 +888,14 @@ protected:
                     
                     std::list<Word>::iterator src_it = it;
                     bool f = true;
-                    for(int i = 0;i < ArrLen<decltype(KeyWord)>::value;++i)
+                    for(int i = 0;i < std::tuple_size<decltype(KW_TUP)>::value;++i)
                     {
                         f = true;
-                        int len = wcslen(KeyWord[i]);
+                        auto [ptr,len] = get_kw_tuple(i,std::make_index_sequence<std::tuple_size<decltype(KW_TUP)>::value>()); 
                         for(int j = 0;j < len;++j)
                         {
                             it->color = OTHER_COLOR;
-                            if(KeyWord[i][j] != it->c)
+                            if(ptr[j] != it->c)
                             {
                                 f = false;
                                 it = src_it;
