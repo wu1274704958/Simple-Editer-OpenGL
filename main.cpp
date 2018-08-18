@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <list>
 #include <tuple>
+#include <type_traits>
 
 static int WORD_W = 10;
 static int WORD_H = 18;
@@ -46,9 +47,8 @@ template<size_t N>
 struct KW{
 public:
     const wchar_t * const p;
-    enum{ Len = N};
+    enum{ Len = N - 1};
     KW(const wchar_t *str) : p(str) {}
-    int get_len() { return Len - 1; }
 };
 
 #define MK_KEYWORD(str)                      \
@@ -110,7 +110,7 @@ auto get_kw_tuple(int index,std::index_sequence<N...> is) -> std::tuple<const wc
 {
     const wchar_t *ptr = nullptr;
     int len = 0;
-    ((index == N && (ptr = std::get<N>(KW_TUP).p,len = std::get<N>(KW_TUP).get_len()),false),...); 
+    ((index == N && (ptr = std::get<N>(KW_TUP).p,len = std::remove_reference_t<decltype(std::get<N>(KW_TUP))>::Len ),false),...); 
     return std::make_tuple(ptr,len);
 }
 
