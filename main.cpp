@@ -682,6 +682,18 @@ public:
         }
         return nullptr;
     }
+    virtual void run() override {
+        while (!glfwWindowShouldClose(m_window))
+	    {
+            draw();
+            glfwSwapBuffers(m_window);
+		    glfwPollEvents();
+	    }
+    }
+    virtual ~Demo1() 
+    {
+        destroy();
+    }
 protected:
     void draw_char()
     {
@@ -994,7 +1006,6 @@ NOSTEP:         ;
         glDeleteShader(line_vs);
         glDeleteShader(line_fg);
         glDeleteProgram(line_program);
-        RenderDemo::destroy();
     }
     static void CharCallBack(GLFWwindow* w,unsigned int v);
     static void CharModsCallBack(GLFWwindow*,unsigned int,int);

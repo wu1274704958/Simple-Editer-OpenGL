@@ -8,7 +8,7 @@ public:
     virtual ~RenderDemo();
     int initWindow(int w,int h,const char *title);
     virtual int init() = 0;
-    void run();
+    virtual void run();
 protected:
     virtual void destroy();
     virtual void draw() = 0;
