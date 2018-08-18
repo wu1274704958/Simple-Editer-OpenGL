@@ -229,7 +229,7 @@ public:
         glfwSetWindowSizeCallback(m_window,Demo1::WindowResize);
         glfwSetMouseButtonCallback(m_window,Demo1::MouseButtonCallBack);
         glfwSetCursorPosCallback(m_window,Demo1::CursorCallBack);
-
+    
         glEnable (GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
@@ -391,6 +391,15 @@ public:
         }
         frame_n = 0;
         needUpdateColour = true;
+    }
+    void push_back_word_na(glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    {
+        Word w(pos_,angle_,color_,c_,w_,h_);
+        words.push_back(w);
+        if(!w.isSpace())
+        {
+            push_back_plane(w);
+        }
     }
 
     Word pop_end_word()
@@ -789,6 +798,7 @@ protected:
                         int len = wcslen(KeyWord[i]);
                         for(int j = 0;j < len;++j)
                         {
+                            it->color = OTHER_COLOR;
                             if(KeyWord[i][j] != it->c)
                             {
                                 f = false;
@@ -962,11 +972,20 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
         break;
     }
 }
-
+static bool CtrlDown = false;
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
-    //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
-    if(v3 == 1 || v3 == 2)
+    printf("Key %d %d %d %d\n",v1,v2,v3,v4);
+    if(v1 == 341)
+    {
+        if(v3 == 1)
+        {
+            CtrlDown = true;
+        }else if(v3 == 0)
+        {
+            CtrlDown = false;
+        }
+    }else if(v3 == 1 || v3 == 2)
     {
         switch(v2)
         {
@@ -1096,6 +1115,65 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 cursor_y = (*pit)->pos.y;
                 demo->frame_n = 0;
             break;
+        }
+    }
+    if(CtrlDown && v3 == 1) // Ctrl v
+    {
+        if(v2 == 47)
+        {
+            const char * p = glfwGetClipboardString(demo->m_window);
+            bool allIsSpace = true;
+            while(*p)
+            {
+                switch(*p)
+                {
+                    case ' ':
+                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            KONG_GE,WORD_W,max_h);
+                        cursor_x += WORD_W;
+                    break;
+                    case '\t':
+                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            SUO_JIN,WORD_W * 4,max_h);
+                        cursor_x += WORD_W * 4;   
+                    break;
+                    case '\n':
+                        demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                            glm::vec3(),
+                            glm::vec3(),
+                            HUI_CHE,6,max_h);
+                        cursor_y += max_h;
+                        cursor_x = 0;
+                    break;
+                    default:
+                        {
+                            auto cu = demo->getcu(*p);
+                            if(!cu)
+                                break;
+                            allIsSpace = false;
+                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(0.0f,0.0f,0.0f),
+                                glm::vec3(1.0f,1.0f,1.0f),
+                                *p,cu->w,cu->h);
+                            cursor_x += cu->w;
+                            if(cu->h > max_h)
+                            {
+                                max_h = cu->h;
+                            }
+                        }
+                    break;
+                }
+                p++;
+            }
+            if(!allIsSpace)
+            {
+                demo->needUpdateColour = true;
+                demo->needUpdatePlanes = true;
+            }
         }
     }
 }
