@@ -1133,19 +1133,19 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 
             break;
             case 336:  // down
-                if( demo->words.empty() || cursor_y == demo->words.back().pos.y)
-                {
+                if( demo->words.empty())
+                    return;
+                else if(cursor_y == demo->words.back().pos.y){
                     if(demo->words.back().c == HUI_CHE)
                     {
                         cursor_y += (*pit)->h;
                         *pit = demo->words.end();
                         cursor_x = 0;
                         demo->frame_n = 0;
-                        return;
                     }
                     return;
-                }
-                    
+                }else if(cursor_y > demo->words.back().pos.y)
+                    return;
                 demo->get_more_xy_it(*pit,cursor_x,cursor_y); 
                 if(*pit == demo->words.end())
                 {
