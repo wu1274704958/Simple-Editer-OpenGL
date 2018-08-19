@@ -15,6 +15,7 @@
         "system_error": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "xlocale": "cpp"
+        "xlocale": "cpp",
+        "chrono": "cpp"
     }
 }

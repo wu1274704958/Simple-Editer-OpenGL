@@ -13,6 +13,8 @@
 #include <list>
 #include <tuple>
 #include <type_traits>
+#include <thread>
+#include <chrono>
 
 static int WORD_W = 10;
 static int WORD_H = 18;
@@ -441,8 +443,9 @@ public:
             push_back_plane(w);
             animate_list.push_back(&(words.back()));
         }
-        frame_n = 0;
+        reSetVernierClock();
         needUpdateColour = true;
+        reDraw();
     }
     void push_back_word_na(glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
@@ -479,8 +482,9 @@ public:
             //planes.pop_back();
             //planes.pop_back();
         }
-        frame_n = 0;
+        reSetVernierClock();
         needUpdateColour = true;
+        reDraw();
         return wor; 
     }
     void insert_back_it_no(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
@@ -546,12 +550,13 @@ public:
             }
         }
         it++;
-        frame_n = 0;
+        reSetVernierClock();
         if(c_ != KONG_GE)
         {
             needUpdatePlanes = true;
         }
         needUpdateColour = true;
+        reDraw();
     }
     void insert_return_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
@@ -578,8 +583,9 @@ public:
             n_it->pos.y += h_;
         }
         it++;
-        frame_n = 0;
+        reSetVernierClock();
         needUpdateColour = true;
+        reDraw();
     }
     void remove_forword_it(std::list<Word>::iterator &it)
     {
@@ -632,11 +638,12 @@ public:
             }
             n_it++;
         }
-        frame_n = 0;
+        reSetVernierClock();
         //printf("%d",it->c);
         
         needUpdatePlanes = true;
         needUpdateColour = true;
+        reDraw();
     }
     void get_less_xy_it(std::list<Word>::iterator &it,int x,int y)
     {
@@ -685,10 +692,34 @@ public:
     virtual void run() override {
         while (!glfwWindowShouldClose(m_window))
 	    {
-            draw();
-            glfwSwapBuffers(m_window);
+            auto now_time = std::chrono::system_clock::now();
+            auto interval = now_time - vernier_clock;
+            if( std::chrono::duration_cast<std::chrono::seconds>(interval).count() >= 1)
+            {
+                vernier_clock = std::chrono::system_clock::now();
+                needDrawVernier = !needDrawVernier;
+                needReDraw = true;
+            }
+
+            if(needReDraw)
+            {
+                needReDraw = false;
+                draw();
+                glfwSwapBuffers(m_window);
+            }  
+            
 		    glfwPollEvents();
+            std::this_thread::sleep_for(std::chrono::microseconds(200));
 	    }
+    }
+    void reDraw()
+    {
+        needReDraw = true;
+    }
+    void reSetVernierClock()
+    {
+        needDrawVernier = true;
+        vernier_clock = std::chrono::system_clock::now();
     }
     virtual ~Demo1() 
     {
@@ -963,11 +994,8 @@ NOSTEP:         ;
         
 		glUniformMatrix4fv(world, 1, GL_FALSE, glm::value_ptr(world_mat));
         draw_char();
-        if(frame_n <= 50)
+        if(needDrawVernier)
             drawVernier(ortho_mat,world_mat);
-        if(frame_n == 100)
-            frame_n = 0;
-        ++frame_n;
         // m_a += sinf(m_s) ;
         // if(m_a >= 360.0f)
         // {
@@ -977,7 +1005,8 @@ NOSTEP:         ;
         //     m_s += 0.01f;
         // }
         
-
+        if(!animate_list.empty())
+            needReDraw = true;
         for(auto it = animate_list.begin();it != animate_list.end();)
         {
             if((*it)->angle.z >= 360.0f)
@@ -1017,8 +1046,7 @@ private:
     GLuint vertex_array,vertex_shader,fragment_shader,texture0,line_vs,line_fg,line_program,line_array;
     GLuint vertex_buffer,vernier_buffer,word_ebo;
     GLuint program;
-    GLuint vposition,ucolor,ortho,world,model,tex0,line_ortho,line_world,line_model,line_color;
-    int frame_n = 0;
+    GLuint ucolor,ortho,world,model,tex0,line_ortho,line_world,line_model,line_color;
     //float m_a = 0.0f;
     //float m_s = 0.0f;
     int char_map_w,char_map_h; 
@@ -1027,6 +1055,9 @@ private:
     std::vector<char_unit::CharUnit> cus;
     bool needUpdatePlanes = false;
     bool needUpdateColour = false;
+    bool needDrawVernier = true;
+    bool needReDraw = true;
+    std::chrono::system_clock::time_point vernier_clock;
 };
 
 
@@ -1153,7 +1184,8 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     
                     cursor_x = (*pit)->pos.x;
                     cursor_y = (*pit)->pos.y;
-                    demo->frame_n = 0;
+                    demo->reDraw();
+                    demo->reSetVernierClock();
                 }
             break;
             case 333:  // right
@@ -1162,6 +1194,8 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 {
                     return;
                 }
+                demo->reDraw();
+                demo->reSetVernierClock();
                 ++(*pit);
                 if(*pit == demo->words.end())
                 {
@@ -1170,18 +1204,15 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     {
                         cursor_y += (*pit)->h;
                         cursor_x = 0;
-                        demo->frame_n = 0;
                          ++(*pit);
                         return ;
                     }
                     cursor_x += (*pit)->w;
-                    demo->frame_n = 0;
                     ++(*pit);
                     return ;
                 }
                 cursor_x = (*pit)->pos.x;
                 cursor_y = (*pit)->pos.y;
-                demo->frame_n = 0;
             break;
             case 328:  // up
                 if(cursor_y == 0)
@@ -1191,8 +1222,8 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 demo->get_less_xy_it(*pit,cursor_x,cursor_y); 
                 cursor_x = (*pit)->pos.x;
                 cursor_y = (*pit)->pos.y;
-                demo->frame_n = 0;
-
+                demo->reDraw();
+                demo->reSetVernierClock();
             break;
             case 336:  // down
                 if( demo->words.empty())
@@ -1203,7 +1234,8 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                         cursor_y += demo->words.back().h;
                         *pit = demo->words.end();
                         cursor_x = 0;
-                        demo->frame_n = 0;
+                        demo->reDraw();
+                        demo->reSetVernierClock();
                     }
                     return;
                 }else if(cursor_y > demo->words.back().pos.y)
@@ -1214,13 +1246,15 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     --(*pit);
                     cursor_x = (*pit)->pos.x + (*pit)->w;
                     cursor_y = (*pit)->pos.y;
-                    demo->frame_n = 0;
+                    demo->reDraw();
+                    demo->reSetVernierClock();
                     ++(*pit);
                     return ;
                 }
                 cursor_x = (*pit)->pos.x;
                 cursor_y = (*pit)->pos.y;
-                demo->frame_n = 0;
+                demo->reDraw();
+                demo->reSetVernierClock();
             break;
         }
     }
@@ -1332,6 +1366,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
             }
             demo->needUpdateColour = true;
             demo->needUpdatePlanes = true;
+            demo->reDraw();
         }
     }
 }
@@ -1341,6 +1376,7 @@ void Demo1::WindowResize(GLFWwindow*,int w,int h)
     glViewport(0,0,w,h);
     Window_width = w;
     Window_height = h;
+    demo->reDraw();
 }
 
 void Demo1::MouseButtonCallBack(GLFWwindow* w,int btn,int isPressed,int v3)
@@ -1380,6 +1416,7 @@ void Demo1::CursorCallBack(GLFWwindow* w,double x,double y)
 
         LastCursorX = x;
         LastCursorY = y;
+        demo->reDraw();
     }else if(RightButtonPressed){
         double offsetx = x - LastCursorX;
         double offsety = y - LastCursorY;
@@ -1389,7 +1426,9 @@ void Demo1::CursorCallBack(GLFWwindow* w,double x,double y)
 
         LastCursorX = x;
         LastCursorY = y;
+        demo->reDraw();
     }
+    
 }
 
 int main()
