@@ -19,6 +19,8 @@
 static int WORD_W = 10;
 static int WORD_H = 18;
 
+static int WORD_WX4 = 0; 
+
 static int Window_width = 600;
 static int Window_height = 500;
 
@@ -277,6 +279,8 @@ public:
             fclose(file);
         }
         max_h = WORD_H;
+        WORD_WX4 = WORD_W * 4;
+
         glfwSetCharCallback(m_window,Demo1::CharCallBack);
         glfwSetCharModsCallback(m_window,Demo1::CharModsCallBack);
         glfwSetKeyCallback(m_window,Demo1::KeyCallBack);
@@ -1111,6 +1115,16 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
     }
 }
 static bool CtrlDown = false;
+
+inline static int getTabW(int x,int y)
+{
+    int m = x % WORD_WX4;
+    if(m == 0)
+        return WORD_WX4;
+    else
+        return WORD_WX4 - m; 
+}
+
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
     //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
@@ -1158,20 +1172,23 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 }
             break;
             case SUO_JIN:
-                if(pit == nullptr || *pit == demo->words.end())
                 {
-                     demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
-                            glm::vec3(),
-                            glm::vec3(),
-                            SUO_JIN,WORD_W * 4,max_h);
-                }else{
-                    demo->insert_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
-                            glm::vec3(),
-                            glm::vec3(),
-                            SUO_JIN,WORD_W * 4,max_h);
+                    int tab_w = getTabW(cursor_x,cursor_y);
+                    if(pit == nullptr || *pit == demo->words.end())
+                    {
+                         demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                SUO_JIN,tab_w,max_h);
+                    }else{
+                        demo->insert_back_it(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                                glm::vec3(),
+                                glm::vec3(),
+                                SUO_JIN,tab_w,max_h);
+                    }
+                    cursor_x += tab_w;    
+                    break;
                 }
-                cursor_x += WORD_W * 4;    
-            break;
             case 331: // left 
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
@@ -1279,11 +1296,13 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             cursor_x += WORD_W;
                         break;
                         case '\t':
-                            demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
-                                glm::vec3(),
-                                glm::vec3(),
-                                SUO_JIN,WORD_W * 4,max_h);
-                            cursor_x += WORD_W * 4;   
+                            {   int tab_w = getTabW(cursor_x,cursor_y);
+                                demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
+                                    glm::vec3(),
+                                    glm::vec3(),
+                                    SUO_JIN,tab_w,max_h);
+                                cursor_x += tab_w;  
+                            } 
                         break;
                         case '\n':
                             demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
@@ -1326,11 +1345,13 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             cursor_x += WORD_W;
                         break;
                         case '\t':
-                            demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
-                                glm::vec3(),
-                                glm::vec3(),
-                                SUO_JIN,WORD_W * 4,max_h);
-                            cursor_x += WORD_W * 4;  
+                            {   int tab_w = getTabW(cursor_x,cursor_y);
+                                demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
+                                    glm::vec3(),
+                                    glm::vec3(),
+                                    SUO_JIN,tab_w,max_h);
+                                cursor_x += tab_w;
+                            }  
                         break;
                         case '\n':
                             demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
