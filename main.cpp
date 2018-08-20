@@ -289,6 +289,7 @@ public:
         glfwSetWindowSizeCallback(m_window,Demo1::WindowResize);
         glfwSetMouseButtonCallback(m_window,Demo1::MouseButtonCallBack);
         glfwSetCursorPosCallback(m_window,Demo1::CursorCallBack);
+        glfwSetWindowFocusCallback(m_window,Demo1::WindowFocusCallBack);
     
         glEnable (GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -742,13 +743,16 @@ public:
     virtual void run() override {
         while (!glfwWindowShouldClose(m_window))
 	    {
-            auto now_time = std::chrono::system_clock::now();
-            auto interval = now_time - vernier_clock;
-            if( std::chrono::duration_cast<std::chrono::seconds>(interval).count() >= 1)
+            if(hasFocus)
             {
-                vernier_clock = std::chrono::system_clock::now();
-                needDrawVernier = !needDrawVernier;
-                needReDraw = true;
+                auto now_time = std::chrono::system_clock::now();
+                auto interval = now_time - vernier_clock;
+                if( std::chrono::duration_cast<std::chrono::seconds>(interval).count() >= 1)
+                {
+                    vernier_clock = std::chrono::system_clock::now();
+                    needDrawVernier = !needDrawVernier;
+                    needReDraw = true;
+                }
             }
 
             if(needReDraw)
@@ -1092,6 +1096,7 @@ NOSTEP:         ;
     static void WindowResize(GLFWwindow*,int,int);
     static void MouseButtonCallBack(GLFWwindow*,int,int,int);
     static void CursorCallBack(GLFWwindow*,double,double);
+    static void WindowFocusCallBack(GLFWwindow*,int);
 private:
     GLuint vertex_array,vertex_shader,fragment_shader,texture0,line_vs,line_fg,line_program,line_array;
     GLuint vertex_buffer,vernier_buffer,word_ebo;
@@ -1107,6 +1112,7 @@ private:
     bool needUpdateColour = false;
     bool needDrawVernier = true;
     bool needReDraw = true;
+    bool hasFocus = true;
     std::chrono::system_clock::time_point vernier_clock;
 };
 
@@ -1496,6 +1502,20 @@ void Demo1::CursorCallBack(GLFWwindow* w,double x,double y)
         demo->reDraw();
     }
     
+}
+
+void Demo1::WindowFocusCallBack(GLFWwindow* w,int f)
+{
+    if(f)
+    {
+        demo->hasFocus = true;
+        demo->reSetVernierClock();
+        demo->reDraw();
+    }else{
+        demo->hasFocus = false;
+        demo->needDrawVernier = false;
+        demo->reDraw();
+    }
 }
 
 int main()
