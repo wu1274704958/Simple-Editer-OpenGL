@@ -55,6 +55,8 @@ public:
     KW(const wchar_t *str) : p(str) {}
 };
 
+inline static int getTabW(int x);
+
 #define MK_KEYWORD(str)                      \
 namespace ns_keywords{ const wchar_t _##str [] = L## #str; }
 
@@ -535,9 +537,53 @@ public:
         }
         adjustPos_END: ;
     }
+    void insert_back_tab_it(std::list<Word>::iterator &it,Word &w)
+    {
+        int right0 = w.pos.x + w.w;
+        int right1 = it->pos.x + it->w;
+        if(right0 >= right1)
+        {
+            it->pos.x = right0;
+            it->w = getTabW(right0);
+            it = words.insert(it,w);
+
+            std::list<Word>::iterator n_it = ++it;
+            int zl = (right0 - right1) + it->w;
+            while(true)
+            {
+                n_it++;
+                if(n_it == words.end())
+                {
+                    break;
+                }
+                n_it->pos.x += zl;
+                if(n_it->c == HUI_CHE)
+                {
+                    break;
+                }
+            }
+        }else{
+            it->pos.x = right0;
+            it->w -= w.w;
+            it = words.insert(it,w);
+            ++it;
+            return;
+        }            
+    }
     void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
         Word w(pos_,angle_,color_,c_,w_,h_);
+        if(it->c == SUO_JIN)
+        {
+            insert_back_tab_it(it,w);
+            needUpdateColour = true;
+            reDraw();
+            if(c_ != KONG_GE || c_ != SUO_JIN)
+            {
+                needUpdatePlanes = true;
+            }
+            return;
+        }
         it = words.insert(it,w);
         std::list<Word>::iterator n_it = it;
         while(true)
@@ -555,7 +601,7 @@ public:
         }
         it++;
         reSetVernierClock();
-        if(c_ != KONG_GE)
+        if(c_ != KONG_GE || c_ != SUO_JIN)
         {
             needUpdatePlanes = true;
         }
@@ -1116,7 +1162,7 @@ void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
 }
 static bool CtrlDown = false;
 
-inline static int getTabW(int x,int y)
+inline static int getTabW(int x)
 {
     int m = x % WORD_WX4;
     if(m == 0)
@@ -1173,7 +1219,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
             break;
             case SUO_JIN:
                 {
-                    int tab_w = getTabW(cursor_x,cursor_y);
+                    int tab_w = getTabW(cursor_x);
                     if(pit == nullptr || *pit == demo->words.end())
                     {
                          demo->push_back_word(glm::vec3(cursor_x,cursor_y,Word_Y),
@@ -1296,7 +1342,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             cursor_x += WORD_W;
                         break;
                         case '\t':
-                            {   int tab_w = getTabW(cursor_x,cursor_y);
+                            {   int tab_w = getTabW(cursor_x);
                                 demo->push_back_word_na(glm::vec3(cursor_x,cursor_y,Word_Y),
                                     glm::vec3(),
                                     glm::vec3(),
@@ -1345,7 +1391,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                             cursor_x += WORD_W;
                         break;
                         case '\t':
-                            {   int tab_w = getTabW(cursor_x,cursor_y);
+                            {   int tab_w = getTabW(cursor_x);
                                 demo->insert_back_it_no(*pit,glm::vec3(cursor_x,cursor_y,Word_Y),
                                     glm::vec3(),
                                     glm::vec3(),
