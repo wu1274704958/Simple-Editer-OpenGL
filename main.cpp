@@ -56,6 +56,7 @@ public:
 };
 
 inline static int getTabW(int x);
+inline static int getFullTabXLess(int x);
 
 #define MK_KEYWORD(str)                      \
 namespace ns_keywords{ const wchar_t _##str [] = L## #str; }
@@ -647,19 +648,49 @@ public:
     void remove_forword_it(std::list<Word>::iterator &it)
     {
         bool f = false;
+        bool itIsTab = false;
+        std::list<Word>::iterator tab_it;
         int x = it->pos.x;
         int y = it->pos.y;
-        //bool f2 = false;
-        //if(it->c == HUI_CHE)
-        //{
-        //    f2 = true;
-        //}
+        if(it->c == SUO_JIN)
+        {
+            itIsTab = true;
+            tab_it = it;
+        }
         --it;
         int offsetx = it->pos.x - x;
         int offsety = it->pos.y - y;
         if(it->c == HUI_CHE)
             f = true;
-        int ci = 0;
+
+        if(itIsTab)
+        {
+            if(!f && it->pos.x >= getFullTabXLess(tab_it->pos.x) )
+            {
+                bool temp = it->isSpace();
+                tab_it->pos.x = it->pos.x;
+                tab_it->w += it->w;
+                it = words.erase(it);
+                if(!temp)
+                     needUpdatePlanes = true;
+                needUpdateColour = true;
+                reDraw();
+                reSetVernierClock();
+                return;
+            }else{
+                tab_it->pos = it->pos;
+                tab_it->w = getTabW(tab_it->pos.x);
+                it = words.erase(it);
+                ++tab_it;
+                printf("%d   %d\n",it->c,tab_it->c);
+                adjustPos(it,tab_it);
+                needUpdatePlanes = true;
+                needUpdateColour = true;
+                reDraw();
+                reSetVernierClock();
+                return;
+            }
+        }
         it = words.erase(it);
         std::list<Word>::iterator n_it = it;
         while(true)
@@ -1187,6 +1218,11 @@ inline static int getTabW(int x)
         return WORD_WX4;
     else
         return WORD_WX4 - m; 
+}
+
+inline static int getFullTabXLess(int x)
+{
+    return x - (x % WORD_WX4);
 }
 
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
