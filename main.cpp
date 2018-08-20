@@ -594,6 +594,7 @@ public:
         }
         it = words.insert(it,w);
         std::list<Word>::iterator n_it = it;
+        int bx = n_it->pos.x + n_it->w;
         while(true)
         {
             n_it++;
@@ -601,11 +602,14 @@ public:
             {
                 break;
             }
-            n_it->pos.x += w_;
+            n_it->pos.x = bx;
             if(n_it->c == HUI_CHE)
             {
                 break;
             }
+            if(n_it->c == SUO_JIN)
+                n_it->w = getTabW(bx);
+            bx += n_it->w;
         }
         it++;
         reSetVernierClock();
@@ -691,6 +695,9 @@ public:
                 return;
             }
         }
+        
+        int bx = it->pos.x;
+        int by = it->pos.y;
         it = words.erase(it);
         std::list<Word>::iterator n_it = it;
         while(true)
@@ -699,9 +706,8 @@ public:
             {
                 break;
             }
-            n_it->pos.x += offsetx;
-            n_it->pos.y += offsety;
-            
+            n_it->pos.x = bx;
+            n_it->pos.y = by;
             if(n_it->c == HUI_CHE)
             {
                 if(f)
@@ -724,6 +730,9 @@ public:
                 }
                 break;
             }
+            if(n_it->c == SUO_JIN)
+                n_it->w = getTabW(bx);
+            bx += n_it->w;
             n_it++;
         }
         reSetVernierClock();
