@@ -1070,8 +1070,8 @@ NOSTEP:         ;
                 it = animate_list.erase(it);
                 continue;
             }else{
-                (*it)->angle.z += 10.0f;
-                (*it)->angle.y += 10.0f;
+                (*it)->angle.z += 16.0f;
+                (*it)->angle.y += 16.0f;
             }
             ++it;
         }
