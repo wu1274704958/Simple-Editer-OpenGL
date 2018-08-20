@@ -218,6 +218,12 @@ public:
     {
         return this->c == HUI_CHE || this->c == KONG_GE || this->c == SUO_JIN;
     }
+    bool inBound(int x,int y,int w_,int h_)
+    {
+        int rbx = pos.x + this->w,rby = pos.y + this->h; // rb is right and bottom
+        return pos.x >= x && pos.y >= y && pos.x <= (x + w_) && pos.y <= (y + h_)  ||  
+                rbx >= x && rby >= y && rbx <= (x + w_) && rby <= (y + h_);
+    }
     Word(const Word& w) {
         this->pos =     w.pos;
         this->color =   w.color;
@@ -780,6 +786,33 @@ public:
         destroy();
     }
 protected:
+
+    void draw_char_unit(Word &w,int index)
+    {
+        glm::mat4 model_mat;
+        model_mat = glm::scale(model_mat,glm::vec3(1.0f,1.0f,1.0f));
+        model_mat = glm::translate(model_mat,glm::vec3(w.pos.x + ((float)w.w)/2.0f ,
+                                                        w.pos.y + ((float)w.h)/2.0f,
+                                                        w.pos.z
+                                                        ));
+        model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.x,glm::vec3(1.0f,0.0f,0.0f));
+        model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.y,glm::vec3(0.0f,1.0f,0.0f));
+        model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.z,glm::vec3(0.0f,0.0f,1.0f));
+
+		glUniformMatrix4fv(model, 1, GL_FALSE, glm::value_ptr(model_mat));
+        glUniform3fv(ucolor,1,glm::value_ptr(w.color));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,word_ebo);
+        int zl = index << 2;
+        GLuint index_buf[] = { 0 + zl ,2 + zl,3 + zl,3 + zl,1 + zl,0 + zl  };
+
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(index_buf),index_buf,GL_STATIC_DRAW);
+
+        //glDrawArrays(GL_TRIANGLES, index, 6);
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    }
     void draw_char()
     {
         if(needUpdateColour)
@@ -813,29 +846,8 @@ protected:
         {
             if(w.isSpace())
                 continue;
-            glm::mat4 model_mat;
-            model_mat = glm::scale(model_mat,glm::vec3(1.0f,1.0f,1.0f));
-            model_mat = glm::translate(model_mat,glm::vec3(w.pos.x + ((float)w.w)/2.0f ,
-                                                            w.pos.y + ((float)w.h)/2.0f,
-                                                            w.pos.z
-                                                            ));
-            model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.x,glm::vec3(1.0f,0.0f,0.0f));
-            model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.y,glm::vec3(0.0f,1.0f,0.0f));
-            model_mat = glm::rotate(model_mat,PI_1_180() * w.angle.z,glm::vec3(0.0f,0.0f,1.0f));
-
-		    glUniformMatrix4fv(model, 1, GL_FALSE, glm::value_ptr(model_mat));
-            glUniform3fv(ucolor,1,glm::value_ptr(w.color));
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,word_ebo);
-            int zl = index << 2;
-            GLuint index_buf[] = { 0 + zl ,2 + zl,3 + zl,3 + zl,1 + zl,0 + zl  };
-
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(index_buf),index_buf,GL_STATIC_DRAW);
-
-            //glDrawArrays(GL_TRIANGLES, index, 6);
-            glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+            if(w.inBound(0 - WorldPosX, 0 - WorldPosY, Window_width,Window_height))
+                draw_char_unit(w,index);
             index += 1;
         }
         
