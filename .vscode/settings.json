@@ -16,6 +16,7 @@
         "tuple": "cpp",
         "utility": "cpp",
         "xlocale": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "cstdlib": "cpp"
     }
 }

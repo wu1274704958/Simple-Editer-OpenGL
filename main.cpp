@@ -769,6 +769,56 @@ public:
              }   
         }
     }
+    bool eq(int x1,int x2,int w)
+    {
+        return x1 >= x2 && (x1 - x2) <= w; 
+    }
+    void get_xy_it(std::list<Word>::iterator &it,int x,int y)
+    {
+        bool dy_y = false; //大于y
+        bool dy_x = false;
+        if(y >= it->pos.y)
+            dy_y = true;
+        if(x >= it->pos.x)
+            dy_x = true;
+        
+        if(eq(y,(int)it->pos.y,it->h))
+        {
+            if(dy_x)
+            {
+                while(it != words.end())
+                {
+                    if(eq(x,(int)it->pos.x,it->w))
+                        return;
+                    ++it;
+                }
+            }else{
+                while(it != words.end())
+                {
+                    if(eq(x,(int)it->pos.x,it->w))
+                        return;
+                    --it;
+                }
+            }
+        }else{
+            if(dy_y)
+            {
+                while(it != words.end())
+                {
+                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                        return;
+                    ++it;
+                }
+            }else{
+                while(it != words.end())
+                {
+                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                        return;
+                    --it;
+                }
+            }
+        }
+    }
     std::list<Word>::iterator get_last_it()
     {
         auto it = words.end();
@@ -809,7 +859,7 @@ public:
             }  
             
 		    glfwPollEvents();
-            std::this_thread::sleep_for(std::chrono::microseconds(200));
+            std::this_thread::sleep_for(std::chrono::microseconds(5));
 	    }
     }
     void reDraw()
@@ -1515,8 +1565,23 @@ void Demo1::MouseButtonCallBack(GLFWwindow* w,int btn,int isPressed,int v3)
     {
         if(isPressed)
         {
-            LeftButtonPressed = true;
-            glfwGetCursorPos(w,&LastCursorX,&LastCursorY);
+            if(!pit)
+                pit = new std::list<Word>::iterator(demo->get_last_it());
+            std::list<Word>::iterator last_it = *pit;
+            double x,y;
+            glfwGetCursorPos(w,&x,&y);
+            demo->get_xy_it(*pit,x - WorldPosX,y - WorldPosY);
+            if(*pit == demo->words.end())
+            {
+                *pit = last_it;
+            }else{
+                cursor_x = (*pit)->pos.x;
+                cursor_y = (*pit)->pos.y;
+                demo->reDraw();
+                demo->reSetVernierClock();
+            }
+            //LeftButtonPressed = true;
+            //
         }else{
             LeftButtonPressed = false;
         }
@@ -1536,18 +1601,19 @@ void Demo1::MouseButtonCallBack(GLFWwindow* w,int btn,int isPressed,int v3)
 
 void Demo1::CursorCallBack(GLFWwindow* w,double x,double y)
 {
-    if(LeftButtonPressed)
-    {
-        double offsetx = x - LastCursorX;
-        double offsety = y - LastCursorY;
+    // if(LeftButtonPressed)
+    // {
+    //     double offsetx = x - LastCursorX;
+    //     double offsety = y - LastCursorY;
 
-        WorldAngleY -= PI_1_180() * offsetx;
-        WorldAngleX += PI_1_180() * offsety;
+    //     WorldAngleY -= PI_1_180() * offsetx;
+    //     WorldAngleX += PI_1_180() * offsety;
 
-        LastCursorX = x;
-        LastCursorY = y;
-        demo->reDraw();
-    }else if(RightButtonPressed){
+    //     LastCursorX = x;
+    //     LastCursorY = y;
+    //     demo->reDraw();
+    // }else 
+    if(RightButtonPressed){
         double offsetx = x - LastCursorX;
         double offsety = y - LastCursorY;
 
