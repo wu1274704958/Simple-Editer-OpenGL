@@ -775,6 +775,8 @@ public:
     }
     void get_xy_it(std::list<Word>::iterator &it,int x,int y)
     {
+        if(it == words.end())
+            --it;
         bool dy_y = false; //大于y
         bool dy_x = false;
         if(y >= it->pos.y)
@@ -789,15 +791,25 @@ public:
                 while(it != words.end())
                 {
                     if(eq(x,(int)it->pos.x,it->w))
+                    {   
+                        ++it; 
                         return;
+                    }
                     ++it;
+                    if(it == words.end() || it->c == HUI_CHE)
+                        break;
                 }
             }else{
                 while(it != words.end())
                 {
                     if(eq(x,(int)it->pos.x,it->w))
+                    {   
+                        ++it; 
                         return;
+                    }
                     --it;
+                    if(it == words.end() || it->c == HUI_CHE)
+                        break;
                 }
             }
         }else{
@@ -806,14 +818,20 @@ public:
                 while(it != words.end())
                 {
                     if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                    {   
+                        ++it; 
                         return;
+                    }
                     ++it;
                 }
             }else{
                 while(it != words.end())
                 {
                     if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                    {   
+                        ++it; 
                         return;
+                    }
                     --it;
                 }
             }
@@ -859,7 +877,7 @@ public:
             }  
             
 		    glfwPollEvents();
-            std::this_thread::sleep_for(std::chrono::microseconds(5));
+            //std::this_thread::sleep_for(std::chrono::microseconds(5));
 	    }
     }
     void reDraw()
