@@ -784,7 +784,7 @@ public:
         if(x >= it->pos.x)
             dy_x = true;
         
-        if(eq(y,(int)it->pos.y,it->h))
+        if(eq(y,(int)it->pos.y,max_h))
         {
             if(dy_x)
             {
@@ -797,7 +797,10 @@ public:
                     }
                     ++it;
                     if(it == words.end() || it->c == HUI_CHE)
+                    {
+                        it = words.end();
                         break;
+                    }
                 }
             }else{
                 while(it != words.end())
@@ -809,7 +812,10 @@ public:
                     }
                     --it;
                     if(it == words.end() || it->c == HUI_CHE)
+                    {
+                        it = words.end();
                         break;
+                    }
                 }
             }
         }else{
@@ -817,7 +823,7 @@ public:
             {
                 while(it != words.end())
                 {
-                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,max_h))
                     {   
                         ++it; 
                         return;
@@ -827,7 +833,7 @@ public:
             }else{
                 while(it != words.end())
                 {
-                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,it->h))
+                    if(eq(x,(int)it->pos.x,it->w) && eq(y,(int)it->pos.y,max_h))
                     {   
                         ++it; 
                         return;
