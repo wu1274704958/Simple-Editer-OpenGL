@@ -17,6 +17,7 @@
         "utility": "cpp",
         "xlocale": "cpp",
         "chrono": "cpp",
-        "cstdlib": "cpp"
+        "cstdlib": "cpp",
+        "xhash": "cpp"
     }
 }

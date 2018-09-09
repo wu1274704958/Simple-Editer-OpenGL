@@ -1390,7 +1390,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
             break;
             case 333:  // right
             
-                if(demo->words.empty() || *pit == demo->words.end() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
+                if(demo->words.empty() || pit == nullptr || *pit == demo->words.end() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
                 {
                     return;
                 }
