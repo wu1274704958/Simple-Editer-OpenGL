@@ -1208,6 +1208,7 @@ NOSTEP:         ;
         glDeleteBuffers(1,&vernier_buffer);
         glDeleteBuffers(1,&word_ebo);
         glDeleteBuffers(1,&vertex_buffer);
+        glDeleteVertexArrays(1,&line_array);
         glDeleteVertexArrays(1,&vertex_array);
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
