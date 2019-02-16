@@ -9,7 +9,7 @@ if(WIN32)
         message("Find GLFW3_PATH env!")
         message(${GLFW3_PATH})
 
-        find_path( GLFW3_INCLUDE_DIR glfw3.h "${GLFW3_PATH}/include/GLFW" )
+        find_path( GLFW3_INCLUDE_DIR GLFW "${GLFW3_PATH}/include" )
         find_library( GLFW3_LIBRARY glfw3.lib "${GLFW3_PATH}/lib" "${GLFW3_PATH}/lib-vc2015")
 
         if( GLFW3_INCLUDE_DIR AND GLFW3_LIBRARY)

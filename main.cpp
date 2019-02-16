@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <SOIL.h>
 #include "char_unit.h"
 #include <vector>
 #include <stdio.h>
@@ -15,6 +14,9 @@
 #include <type_traits>
 #include <thread>
 #include <chrono>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 static int WORD_W = 10;
 static int WORD_H = 18;
@@ -347,10 +349,10 @@ public:
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
         
-        unsigned char *image_data = SOIL_load_image("../../res/test.png",&char_map_w,&char_map_h,0,SOIL_LOAD_RGBA);
+        unsigned char *image_data = stbi_load("../../res/test.png",&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char_map_w, char_map_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         glGenerateMipmap(GL_TEXTURE_2D);
-        SOIL_free_image_data(image_data);
+		stbi_image_free(image_data);
         glBindTexture(GL_TEXTURE_2D,0);
 
         vertex_shader = glCreateShader(GL_VERTEX_SHADER);
