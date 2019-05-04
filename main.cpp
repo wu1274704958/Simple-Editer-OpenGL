@@ -288,8 +288,10 @@ public:
                     WORD_H = cu.h;
                     WORD_W = cu.w;
                 }
+                printf("%d %d %d %d %c\n",cu.x,cu.y,cu.w,cu.h,(char)cu.c);
                 cus.push_back(cu);
             }
+            printf("loaded texture config!\n");
             fclose(file);
         }
         max_h = WORD_H;
