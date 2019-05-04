@@ -145,7 +145,7 @@ constexpr float PI_1_180()
     return PI/180.0f;
 }
 
-BuildStr(ShaderSrc,vertex, #version 450 core\n
+BuildStr(ShaderSrc,vertex, #version 330 core\n
     uniform mat4 ortho; \n
     uniform mat4 world; \n
     uniform mat4 model; \n
@@ -159,7 +159,7 @@ BuildStr(ShaderSrc,vertex, #version 450 core\n
     }\n
 )
 
-BuildStr(ShaderSrc,fragment, #version 450 core \n
+BuildStr(ShaderSrc,fragment, #version 330 core \n
     in vec2 TexCoord;\n
     out vec4 color;  \n
     uniform sampler2D ourTexture;\n
@@ -174,7 +174,7 @@ BuildStr(ShaderSrc,fragment, #version 450 core \n
     }\n
 )
 
-BuildStr(ShaderSrc,line_vs, #version 450 core\n
+BuildStr(ShaderSrc,line_vs, #version 330 core\n
     uniform mat4 ortho; \n
     uniform mat4 world; \n
     uniform mat4 model; \n
@@ -185,7 +185,7 @@ BuildStr(ShaderSrc,line_vs, #version 450 core\n
     }\n
 )
 
-BuildStr(ShaderSrc,line_fg, #version 450 core \n
+BuildStr(ShaderSrc,line_fg, #version 330 core \n
     out vec4 color;  \n
     uniform vec3 Color;\n
     void main()\n
@@ -941,7 +941,7 @@ protected:
 
     void draw_char_unit(Word &w,int index)
     {
-        glm::mat4 model_mat;
+        glm::mat4 model_mat(1.0f);
         model_mat = glm::scale(model_mat,glm::vec3(1.0f,1.0f,1.0f));
         model_mat = glm::translate(model_mat,glm::vec3(w.pos.x + ((float)w.w)/2.0f ,
                                                         w.pos.y + ((float)w.h)/2.0f,
@@ -1055,7 +1055,7 @@ protected:
         glUniformMatrix4fv(line_ortho , 1, GL_FALSE, glm::value_ptr(ortho_mat));
         glUniformMatrix4fv(line_world , 1, GL_FALSE, glm::value_ptr(world_mat));
 
-        glm::mat4 model_mat;
+        glm::mat4 model_mat(1.0f);
         model_mat = glm::translate(model_mat,glm::vec3(cursor_x + 1.0f ,cursor_y,Word_Y - 5.0f));
         model_mat = glm::scale(model_mat,glm::vec3(1.0f,WORD_H,1.0f));
         glUniformMatrix4fv(line_model , 1, GL_FALSE, glm::value_ptr(model_mat));
@@ -1209,7 +1209,7 @@ NOSTEP:         ;
         glm::mat4 ortho_mat = glm::ortho(0.0f, (float)Window_width, (float)Window_height, 0.0f,-1000.0f,1000.0f);
 	    glUniformMatrix4fv(ortho , 1, GL_FALSE, glm::value_ptr(ortho_mat));
         
-        glm::mat4 world_mat;
+        glm::mat4 world_mat(1.0f);
         world_mat = glm::scale(world_mat,glm::vec3(1.0f));
         world_mat = glm::translate(world_mat,glm::vec3(WorldPosX,WorldPosY,0.0f));
         world_mat = glm::rotate(world_mat,WorldAngleX,glm::vec3(1.0f,0.0f,0.0f));
