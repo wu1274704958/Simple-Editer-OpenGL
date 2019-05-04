@@ -32,6 +32,19 @@ if(WIN32)
 else()
 
     message("Not Windows!")
+    find_path( GLFW3_INCLUDE_DIR GLFW "/usr/include" )
+    find_library( GLFW3_LIBRARY glfw "/usr/lib/x86_64-linux-gnu/")
+
+    if( GLFW3_INCLUDE_DIR AND GLFW3_LIBRARY)
+
+        message("find glfw3 ${GLFW3_LIBRARY}")
+        set( GLFW3_FOUND TRUE )
+
+    else()
+
+        set( GLFW3_FOUND FALSE )
+
+    endif()
 
 endif()
 

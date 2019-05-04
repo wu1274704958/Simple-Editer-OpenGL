@@ -31,6 +31,18 @@ if(WIN32)
 else()
 
     message("Not Windows!")
+    find_path( GLM_INCLUDE_DIR glm "/usr/include" )
+
+    if( GLM_INCLUDE_DIR )
+
+        message("find glm!")
+        set( GLM_FOUND TRUE )
+
+    else()
+
+        set( GLM_FOUND FALSE )
+
+    endif()
 
 endif()
 

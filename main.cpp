@@ -272,8 +272,11 @@ public:
         //     -0.8f,0.8f,0.0f,    0.0f,0.0f,
         // };
         planes.reserve(30);
-
+#if defined(WIN32)
         FILE *file = fopen("../../res/test.txt","rb");
+#else
+        FILE *file = fopen("../res/test.txt","rb");
+#endif
         if(file)
         {
             int v = 0;
@@ -348,8 +351,14 @@ public:
 
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        
+    
+
+#if defined(WIN32)
         unsigned char *image_data = stbi_load("../../res/test.png",&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
+#else
+        unsigned char *image_data = stbi_load("../res/test.png",&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
+#endif
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char_map_w, char_map_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         glGenerateMipmap(GL_TEXTURE_2D);
 		stbi_image_free(image_data);
@@ -463,6 +472,11 @@ public:
         needUpdateColour = true;
         reDraw();
     }
+
+    void push_back_word(glm::vec3 &&pos_,glm::vec3&& angle_,glm::vec3&& color_,wchar_t c_,int w_,int h_)
+    {
+       	push_back_word(pos_,angle_,color_,c_,w_,h_); 
+    }  
     void push_back_word_na(glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
         Word w(pos_,angle_,color_,c_,w_,h_);
@@ -471,6 +485,11 @@ public:
         {
             push_back_plane(w);
         }
+    }
+
+    void push_back_word_na(glm::vec3 &&pos_,glm::vec3&& angle_,glm::vec3&& color_,wchar_t c_,int w_,int h_)
+    {
+        push_back_word_na(pos_,angle_,color_,c_,w_,h_);
     }
 
     Word pop_end_word()
@@ -504,6 +523,13 @@ public:
         return wor; 
     }
     void insert_back_it_no(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
+    {
+        Word w(pos_,angle_,color_,c_,w_,h_);
+        it = words.insert(it,w);
+        ++it;
+    }
+
+    void insert_back_it_no(std::list<Word>::iterator &it,glm::vec3 &&pos_,glm::vec3&& angle_,glm::vec3&& color_,wchar_t c_,int w_,int h_)
     {
         Word w(pos_,angle_,color_,c_,w_,h_);
         it = words.insert(it,w);
@@ -580,6 +606,11 @@ public:
             return;
         }            
     }
+
+    void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &&pos_,glm::vec3&& angle_,glm::vec3&& color_,wchar_t c_,int w_,int h_)
+    {
+	insert_back_it(it,pos_,angle_,color_,c_,w_,h_);
+    }
     void insert_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
         Word w(pos_,angle_,color_,c_,w_,h_);
@@ -621,6 +652,11 @@ public:
         }
         needUpdateColour = true;
         reDraw();
+    }
+
+    void insert_return_back_it(std::list<Word>::iterator &it,glm::vec3 &&pos_,glm::vec3&& angle_,glm::vec3&& color_,wchar_t c_,int w_,int h_)
+    {
+	insert_return_back_it(it,pos_,angle_,color_,c_,w_,h_);
     }
     void insert_return_back_it(std::list<Word>::iterator &it,glm::vec3 &pos_,glm::vec3& angle_,glm::vec3& color_,wchar_t c_,int w_,int h_)
     {
@@ -920,7 +956,12 @@ protected:
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,word_ebo);
         int zl = index << 2;
-        GLuint index_buf[] = { 0 + zl ,2 + zl,3 + zl,3 + zl,1 + zl,0 + zl  };
+        GLuint index_buf[] = { 	static_cast<GLuint>(0 + zl) ,
+				static_cast<GLuint>(2 + zl),
+				static_cast<GLuint>(3 + zl),
+				static_cast<GLuint>(3 + zl),
+				static_cast<GLuint>(1 + zl),
+				static_cast<GLuint>(0 + zl)  };
 
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(index_buf),index_buf,GL_STATIC_DRAW);
 
