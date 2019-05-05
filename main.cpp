@@ -925,6 +925,7 @@ public:
     virtual void run() override {
         while (!glfwWindowShouldClose(m_window))
 	    {
+			auto start = std::chrono::system_clock::now();
             if(hasFocus)
             {
                 auto now_time = std::chrono::system_clock::now();
@@ -945,6 +946,9 @@ public:
             }  
             
 		    glfwPollEvents();
+			auto end = std::chrono::system_clock::now();
+			int micros = static_cast<int>( std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() );
+			time_of_one_frame = static_cast<float>(micros) / 1000.0f;
             //std::this_thread::sleep_for(std::chrono::microseconds(5));
 	    }
     }
@@ -1263,8 +1267,8 @@ NOSTEP:         ;
                 it = animate_list.erase(it);
                 continue;
             }else{
-                (*it)->angle.z += 16.0f;
-                (*it)->angle.y += 16.0f;
+                (*it)->angle.z += 1.0f * time_of_one_frame;
+                (*it)->angle.y += 1.0f * time_of_one_frame;
             }
             ++it;
         }
@@ -1308,6 +1312,7 @@ private:
     bool needReDraw = true;
     bool hasFocus = true;
     std::chrono::system_clock::time_point vernier_clock;
+	float time_of_one_frame = 16.6f;
 };
 
 
