@@ -31,9 +31,31 @@ static float cursor_y = 0;
 
 #define Word_Y 0.0f
 
+#ifdef WIN32
+
 #define HUI_CHE 28
 #define KONG_GE 32
 #define SUO_JIN 15 
+#define BACK_SPACE 14
+#define RIGHT_ARROW 333
+#define LEFT_ARROW 331
+#define UP_ARROW 328
+#define DOWN_ARROW 336
+#define CHAR_V 47
+
+#else
+
+#define HUI_CHE 36
+#define KONG_GE 32
+#define SUO_JIN 23
+#define BACK_SPACE 22
+#define RIGHT_ARROW 114
+#define LEFT_ARROW 113
+#define UP_ARROW 111
+#define DOWN_ARROW 116
+#define CHAR_V 55
+
+#endif
 
 #define GREEN glm::vec3(0.0f,1.0f,0.0f)
 #define STR_COLOR glm::vec3(1.0f,0.5f,0.5f)
@@ -1387,7 +1409,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 cursor_y += max_h;
                 cursor_x = 0;
             break;
-            case 14:
+            case BACK_SPACE:
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
                 if(pit == nullptr || *pit == demo->words.end()){
@@ -1418,7 +1440,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     cursor_x += tab_w;    
                     break;
                 }
-            case 331: // left 
+            case LEFT_ARROW: // left
                 if(cursor_x <= 0 && cursor_y <= 0)
                     return;
                 {
@@ -1434,7 +1456,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                     demo->reSetVernierClock();
                 }
             break;
-            case 333:  // right
+            case RIGHT_ARROW:  // right
             
                 if(demo->words.empty() || pit == nullptr || *pit == demo->words.end() || ( cursor_x > demo->words.back().pos.x && cursor_y == demo->words.back().pos.y ) )
                 {
@@ -1460,7 +1482,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 cursor_x = (*pit)->pos.x;
                 cursor_y = (*pit)->pos.y;
             break;
-            case 328:  // up
+            case UP_ARROW:  // up
                 if(cursor_y == 0)
                     return;
                 if(!pit)
@@ -1471,7 +1493,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
                 demo->reDraw();
                 demo->reSetVernierClock();
             break;
-            case 336:  // down
+            case DOWN_ARROW:  // down
                 if( demo->words.empty())
                     return;
                 else if(cursor_y == demo->words.back().pos.y){
@@ -1506,7 +1528,7 @@ void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
     }
     if(CtrlDown && v3 == 1) // Ctrl v
     {
-        if(v2 == 47)
+        if(v2 == CHAR_V)
         {
             const char * p = glfwGetClipboardString(demo->m_window);
             
