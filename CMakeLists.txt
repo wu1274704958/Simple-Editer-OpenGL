@@ -6,7 +6,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
 
-    add_compile_options("/std:c++17")
+    message("is Windows")
+    add_definitions("/std:c++17")
     set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO /subsystem:windows /entry:mainCRTStartup")
 
 else()
