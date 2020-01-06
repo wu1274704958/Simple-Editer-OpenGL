@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <thread>
 #include <chrono>
-
+#include <FindPath.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -294,11 +294,16 @@ public:
         //     -0.8f,0.8f,0.0f,    0.0f,0.0f,
         // };
         planes.reserve(30);
-#if defined(WIN32)
-        FILE *file = fopen("../../res/test.txt","rb");
-#else
-        FILE *file = fopen("../res/test.txt","rb");
-#endif
+
+        FILE *file = nullptr;
+        auto conf = wws::find_path(3,"test.txt");
+        if(std::filesystem::exists(conf))
+        {
+            auto fn = conf.generic_string();
+            printf("find conf path %s \n",fn.c_str());
+            file = fopen(fn.c_str(),"rb");
+        }
+
         if(file)
         {
             int v = 0;
@@ -376,12 +381,19 @@ public:
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     
+        auto img_path = wws::find_path(3,"test.png");
+        std::string img_path_str;
+        if(std::filesystem::exists(img_path))
+        {
+            img_path_str = img_path.generic_string();
+            printf("find img path %s \n",img_path_str.c_str());
+        }else
+        {
+            throw std::runtime_error("Not find image path!!!");
+        }
+        
 
-#if defined(WIN32)
-        unsigned char *image_data = stbi_load("../../res/test.png",&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
-#else
-        unsigned char *image_data = stbi_load("../res/test.png",&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
-#endif
+        unsigned char *image_data = stbi_load(img_path_str.c_str(),&char_map_w,&char_map_h,NULL, STBI_rgb_alpha);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, char_map_w, char_map_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -1340,7 +1352,7 @@ void Demo1::CharCallBack(GLFWwindow* w,unsigned int v)
     {
         max_h = cu->h;
     }
-    //printf("%d\n",v);
+    printf("%d\n",v);
 }
 
 void Demo1::CharModsCallBack(GLFWwindow*,unsigned int v1,int v2)
@@ -1383,7 +1395,7 @@ inline static int getFullTabXLess(int x)
 
 void Demo1::KeyCallBack(GLFWwindow*,int v1,int v2,int v3,int v4)
 {
-    //printf("Key %d %d %d %d\n",v1,v2,v3,v4);
+    printf("Key %d %d %d %d\n",v1,v2,v3,v4);
     if(v1 == 341)
     {
         if(v3 == 1)
