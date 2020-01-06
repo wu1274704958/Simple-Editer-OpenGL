@@ -8,7 +8,7 @@ if(WIN32)
 
     message("is Windows")
     add_definitions(/permissive-)
-    set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO /subsystem:windows /entry:mainCRTStartup")
+    add_link_options(/SAFESEH:NO /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup /NODEFAULTLIB:library)
 
 else()
 
