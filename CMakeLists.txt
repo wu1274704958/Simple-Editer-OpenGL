@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
 
     message("is Windows")
-    add_definitions("/std:c++17")
+    add_definitions(/permissive-)
     set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO /subsystem:windows /entry:mainCRTStartup")
 
 else()
