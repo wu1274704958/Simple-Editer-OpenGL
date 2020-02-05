@@ -29,7 +29,7 @@ namespace wws {
 			return std::make_tuple(false, res_all);
 	}
 
-    std::filesystem::path find_path(int deep,const char* name)
+    std::filesystem::path find_path(int deep,const char* name,bool is_dir = false)
     {
     	std::filesystem::path res;
     	std::vector<std::filesystem::path> wait_ck;
@@ -37,8 +37,11 @@ namespace wws {
     	root = std::filesystem::absolute(root);
     	wait_ck.push_back(root);
 
-    	auto f = [name](const std::filesystem::path& t)->bool {
-    		return !std::filesystem::is_directory(t) && t.filename() == name;
+    	auto f = [name,is_dir](const std::filesystem::path& t)->bool {
+			if(is_dir)
+    			return std::filesystem::is_directory(t) && t.filename() == name;
+			else 
+				return std::filesystem::is_regular_file(t) && t.filename() == name;
     	};
 
     	while (deep > 0)
